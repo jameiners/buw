@@ -78,9 +78,12 @@ book:
 
 # Bibliography
 bibliography: bibliography/references.bib
-csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl"
-# csl: bibliography/ieee.csl
+# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl"
+csl: bibliography/ieee.csl
 
+execute:
+  # freeze: true
+  enabled: true
 
 format:
   html:
@@ -103,7 +106,7 @@ format:
   #   # fontcolor: "black"
   #   highlight-style: github
 
-  typst: defaults
+  typst: default
 
   # pdf:
   #   documentclass: scrbook
