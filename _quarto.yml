@@ -5,24 +5,19 @@ project:
 lang: de
 
 book:
-  title: "M 5.3 Elektronik (ELK)"
+  title: "Mikroorganismen im Sand und deren Auswirkung auf die Umwelt"
   author:
-    - name: "Mirco Meiners"
-      orcid: "0000-0002-9709-4191"
-      email: "Mirco.Meiners@hs-bremen.de"
+    - name: "Jasper Meiners"
+      orcid: ""
+      email: "Jasper.Meiners@icloud.com"
       corresponding: true
       roles: "Lead author"
       affiliation:
-        - id: hsb
-        - name: "Hochschule Bremen - City University of Applied Sciences"
+        - id: AG
+        - name: "Altes Gymnasium Bremen"
           city: "Bremen"
           state: "Germany"
-          url: "https://www.hs-bremen.de/person/mimeiners/"
-    - name: "Tim Ziemann"
-      email: "Tim.Ziemann@hs-bremen.de"
-      roles: "Supporting author"
-      affiliation:
-        - ref: hsb
+          url: "https://www.altes-gymnasium-bremen.de/deutsch/start.php"
           
   date: last-modified
 #  license: "Apache-2.0 license"
@@ -31,50 +26,23 @@ book:
 
   page-footer:
     left: |
-      M 5.3 Elektronik (ELK), M. Meiners, HSB.
+      BundesUmweltWettbewerb 2027, J. Meiners, Altes Gymnasium Bremen
     right: |
       This book was built with <a href="https://quarto.org/">Quarto</a>.
-#  cover-image: images/hsb-logo.png
-#  favicon: images/hsb-logo.png
-  site-url: https://mimeiners.github.io/elk/
-  repo-url: https://github.com/mimeiners/elk/
+#  cover-image: images/ag-logo.png
+#  favicon: images/ag-logo.png
+  site-url: https://jameiners.github.io/buw/
+  repo-url: https://github.com/jameiners/buw/
   repo-branch: main
   repo-actions: [edit, issue]
-  downloads: [pdf, epub]
+  downloads: [pdf]
     
   chapters:
     - index.qmd
-
-    - part: Seminar
-      chapters:
-        - lec/lec_01_intro.qmd
-        # - lec/lec_02_signals.qmd
-        # - lec/lec_03_pn-diode.qmd
-        # - lec/lec_04_single-trans-amp.qmd
-        # - lec/lec_05_opamp.qmd
-        # - lec/lec_06_cir-elem-variation.qmd
-
-    # - part: Übungen
-    #   chapters:
-    #     - hw/hw_01_signals.qmd
-    #     - hw/hw_02_diodes.qmd
-    #     - hw/hw_03_amps.qmd
-        
-    - part: Labor
-      chapters:
-        - lab/lab_01_Activity_intro.qmd
-        - lab/lab_02_Activity_19.qmd
-        - lab/lab_03_Activity_22.qmd
-        - lab/lab_04_Activity_23.qmd
-        # - lab/lab_05_dega_Activity.ipynb
-
-    # - part: Transistor-Thermometer
-    #  chapters:
-    #    - lab/TranThermo/index.qmd
-
+    - 01_intro.qmd
     - references.qmd
        
-  output-file: "elk"
+  output-file: "buw"
 
 # Bibliography
 bibliography: bibliography/references.bib
@@ -137,12 +105,11 @@ format:
   #     - ignorefoot
   #     - heightrounded
 
-  #   fontsize: 11pt
+  #   fontsize: 14pt
   #   pdfengine: xelatex
 
-  #   mainfont: "Calibri"
-  #   # mainfont: "Times New Roman"
-  #   # sansfont: "Arial"
+  #   mainfont: "Times New Roman"
+  #   sansfont: "Arial"
   #   monofont: "Courier New"
   #   mathfont: "TeX Gyre Termes Math"
   #   highlight-style: pygments
