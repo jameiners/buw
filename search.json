@@ -1,0 +1,42 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Mikroorganismen im Sand und deren Auswirkung auf die Umwelt",
+    "section": "",
+    "text": "BundesUmweltWettbewerb\nBasierend auf den Arebiten des Max-Planck-Instituts für marine Mikrobiologie beschäftige ich mich mit den Auswirkungen von Mikroorganismen im Sand für unsere Umwelt [1],[2].\n\n\n\n\n[1] S. Ahmerkamp u. a., „The Effect of Sediment Grain Properties and Porewater Flow on Microbial Abundance and Respiration in Permeable Sediments“, Sci Rep, Bd. 10, Nr. 1, S. 3573, Feb. 2020, doi: 10.1038/s41598-020-60557-7.\n\n\n[2] D. Probandt, T. Eickhorst, A. Ellrott, R. Amann, und K. Knittel, „Microbial Life on a Sand Grain: From Bulk Sediment to Single Grains“, The ISME Journal, Bd. 12, Nr. 2, S. 623–633, Feb. 2018, doi: 10.1038/ismej.2017.197.",
+    "crumbs": [
+      "BundesUmweltWettbewerb"
+    ]
+  },
+  {
+    "objectID": "01_intro.html",
+    "href": "01_intro.html",
+    "title": "1  Einleitung",
+    "section": "",
+    "text": "1.1 Paper 1",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Einleitung</span>"
+    ]
+  },
+  {
+    "objectID": "01_intro.html#paper-2",
+    "href": "01_intro.html#paper-2",
+    "title": "1  Einleitung",
+    "section": "1.2 Paper 2",
+    "text": "1.2 Paper 2",
+    "crumbs": [
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Einleitung</span>"
+    ]
+  },
+  {
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "Literaturverzeichnis",
+    "section": "",
+    "text": "[1] S.\nAhmerkamp et al., “The effect of sediment grain\nproperties and porewater flow on microbial abundance and respiration in\npermeable sediments,” Sci Rep, vol. 10, no. 1, p. 3573,\nFeb. 2020, doi: 10.1038/s41598-020-60557-7.\n\n\n[2] D.\nProbandt, T. Eickhorst, A. Ellrott, R. Amann, and K. Knittel,\n“Microbial life on a sand grain: From bulk sediment to single\ngrains,” The ISME Journal, vol. 12, no. 2, pp. 623–633,\nFeb. 2018, doi: 10.1038/ismej.2017.197.",
+    "crumbs": [
+      "Literaturverzeichnis"
+    ]
+  }
+]
