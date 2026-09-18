@@ -1,16 +1,48 @@
 """
 Provides SCPI access to Red Pitaya from host computer.
+
+!!! LATEST IN DEV !!! - 27.5.2026
 """
 
+import math
+import re
 import socket
+import time
+import warnings
 from enum import Enum
-from typing import List, Optional, Union
+from typing import List, Optional, Tuple, Union
 import numpy as np
+import struct
 
 __author__ = "Luka Golinar, Iztok Jeras, Miha Gjura"
-__copyright__ = "Copyright 2025, Red Pitaya"
-__OS_version__ = "IN DEV"
+__copyright__ = "Copyright 2026, Red Pitaya"
+__version__ = "3.0.0"
+__OS_version__ = "3.00 and higher"
 
+#TODO - is dual return list type even necessary? Maybe just skip the None values
+
+
+class SCPIError(Exception):
+    """Custom exception for SCPI communication errors."""
+    def __init__(self, message: str, error_code: Optional[int] = None):
+        super().__init__(message)
+        self.error_code = error_code
+
+class SCPICriticalError(SCPIError):
+    """Exception raised for critical SCPI errors (error code > 9500)."""
+    pass
+
+
+class BoardModel(Enum):
+    """Red Pitaya board model. Pass to functions that have board-specific behaviour."""
+    STEMLAB_125_14                  = "STEMLAB_125_14"
+    STEMLAB_125_14_4INPUT           = "STEMLAB_125_14_4INPUT"
+    STEMLAB_125_14_GEN2             = "STEMLAB_125_14_GEN2"
+    STEMLAB_125_14_PRO_Z7020_GEN2   = "STEMLAB_125_14_PRO_Z7020_GEN2"
+    STEMLAB_125_14_TI               = "STEMLAB_125_14_TI"
+    STEMLAB_65_16_TI                = "STEMLAB_65_16_TI"
+    SDRLAB_122_16                   = "SDRLAB_122_16"
+    SIGNALLAB_250_12                = "SIGNALLAB_250_12"
 
 class Waveform(Enum):
     """Waveform types for signal generator."""
@@ -29,9 +61,8 @@ class TriggerSource(Enum):
     EXT_PE = "EXT_PE"
     EXT_NE = "EXT_NE"
     INT = "INT"
-    GATED = "GATED"
 
-class Load(Enum):
+class GenLoad(Enum):
     """Load settings for signal generator."""
     INF = "INF"
     L50 = "L50"
@@ -45,7 +76,32 @@ class SweepDirection(Enum):
     """Sweep directions for signal generator."""
     NORMAL = "NORMAL"
     UP_DOWN = "UP_DOWN"
-    
+
+class AcqTrigSource(Enum):
+    """Trigger sources for acquisition (ACQ:TRig command)."""
+    DISABLED = "DISABLED"
+    # Analog channel — positive / negative / any edge
+    CH1_PE   = "CH1_PE"
+    CH1_NE   = "CH1_NE"
+    CH1_AE   = "CH1_AE"   # Any edge
+    CH2_PE   = "CH2_PE"
+    CH2_NE   = "CH2_NE"
+    CH2_AE   = "CH2_AE"   # Any edge
+    # STEMlab 125-14 4-Input only
+    CH3_PE   = "CH3_PE"
+    CH3_NE   = "CH3_NE"
+    CH3_AE   = "CH3_AE"   # Any edge
+    CH4_PE   = "CH4_PE"
+    CH4_NE   = "CH4_NE"
+    CH4_AE   = "CH4_AE"   # Any edge
+    # Generator / external
+    AWG_PE   = "AWG_PE"
+    AWG_NE   = "AWG_NE"
+    EXT_PE   = "EXT_PE"
+    EXT_NE   = "EXT_NE"
+    # Immediately
+    NOW      = "NOW"
+
 class Units(Enum):
     """Acquisition data return type."""
     RAW = "RAW"
@@ -60,6 +116,11 @@ class Gain(Enum):
     """Input gain settings for oscilloscope."""
     LV = "LV"
     HV = "HV"
+
+class ByteOrder(Enum):
+    """Byte order settings for binary data."""
+    LEND = "LEND"
+    BEND = "BEND"
 
 class Coupling(Enum):
     """Input coupling settings for oscilloscope."""
@@ -92,11 +153,18 @@ class SPIMode(Enum):
     LIST = "LIST"
     HISL = "HISL"
     HIST = "HIST"
-    
+
 class SPICSMode(Enum):
     """SPI chip select mode settings"""
     NORMAL = "NORMAL"
     HIGH = "HIGH"
+
+class SPIDataType(Enum):
+    """SPI data type settings."""
+    BIN = "BIN"
+    OCT = "OCT"
+    DEC = "DEC"
+    HEX = "HEX"
     
 class CANMode(Enum):
     """CAN mode settings."""
@@ -105,7 +173,7 @@ class CANMode(Enum):
     SAMPLES = "3_SAMPLES"
     ONE_SHOT = "ONE_SHOT"
     BERR_REPORTING = "BERR_REPORTING"
-    
+
 class CANState(Enum):
     """CAN state settings."""
     ERROR_ACTIVE = "ERROR_ACTIVE"
@@ -114,12 +182,12 @@ class CANState(Enum):
     BUS_OFF = "BUS_OFF"
     STOPPED = "STOPPED"
     SLEEPING = "SLEEPING"
-    
+
 class LCRMode(Enum):
     """LCR meter mode settings."""
     SERIES = "SERIES"
     PARALLEL = "PARALLEL"
-    
+
 class LCRExtMode(Enum):
     """LCR meter extended mode settings."""
     LCR_EXT = "LCR_EXT"
@@ -133,6 +201,18 @@ class LCRExtShunt(Enum):
     S10K = "S10k"
     S100K = "S100k"
     S1M = "S1M"
+
+class DaisyMode(Enum):
+    """Daisy chain synchronisation method."""
+    X_CHANNEL    = "X_CHANNEL"     # X-channel system 1.0 (SATA-based, STEMlab 125-14 only)
+    X_CHANNEL_V2 = "X_CHANNEL_V2"  # X-channel system 2.0 (formerly Click Shield synchronisation)
+
+class DaisyTrigMode(Enum):
+    """Trigger source to be shared."""
+    ADC = "ADC"
+    DAC = "DAC"
+
+
 
 class scpi (object):
     """SCPI class used to access Red Pitaya over an IP network."""
@@ -153,6 +233,7 @@ class scpi (object):
         self.host    = host
         self.port    = port
         self.timeout = timeout
+        self._socket: Optional[socket.socket] = None
 
         try:
             self._socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -163,95 +244,218 @@ class scpi (object):
             self._socket.connect((host, port))
 
         except socket.error as e:
-            print('SCPI >> connect({!s:s}:{:d}) failed: {!s:s}'.format(host, port, e))
+            if self._socket is not None:
+                try:
+                    self._socket.close()
+                except OSError:
+                    pass
+                self._socket = None
+            raise ConnectionError('SCPI >> connect({!s:s}:{:d}) failed: {!s:s}'.format(host, port, e)) from e
+
+    def __enter__(self):
+        """Context manager entry."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit."""
+        self.close()
 
     def __del__(self):
-        if self._socket is not None:
-            self._socket.close()
-        self._socket = None
+        """Cleanup socket connection on object destruction."""
+        try:
+            self.close()
+        except (OSError, AttributeError):
+            pass  # Ignore cleanup errors
+
+    @property
+    def is_connected(self) -> bool:
+        """Check if socket is connected."""
+        return self._socket is not None
 
     def close(self):
         """Close IP connection."""
-        self.__del__()
+        if self._socket is not None:
+            try:
+                self._socket.close()
+            except OSError:
+                pass  # Ignore close errors
+            finally:
+                self._socket = None
 
-    def rx_txt(self, chunksize: int = 4096):
-        """Receive text string and return it after removing the delimiter."""
+    def _ensure_connected(self):
+        """Ensure socket is connected, raise exception if not."""
+        if self._socket is None:
+            raise ConnectionError("Not connected to Red Pitaya device")
+
+    def rx_txt(self, chunksize: int = 4096) -> str:
+        """Receive text string and return it after removing the delimiter.
+        
+        Args:
+            chunksize: Size of chunks to receive (default: 4096)
+            
+        Returns:
+            Received text string without delimiter
+            
+        Raises:
+            ConnectionError: If not connected to device or connection closed
+            socket.error: If communication fails
+        """
+        self._ensure_connected()
+        
         msg = ''
-        while 1:
-            chunk = self._socket.recv(chunksize).decode('utf-8')        # Receive chunk size of 2^n preferably
-            msg += chunk
-            if (len(msg) >= 2 and msg[-2:] == self.delimiter):
-                return msg[:-2]
+        try:
+            while True:
+                data = self._socket.recv(chunksize)  # type: ignore
+                if not data:  # Connection closed by peer
+                    raise ConnectionError("Socket connection closed by peer")
+                
+                chunk = data.decode('utf-8')
+                msg += chunk
+                if len(msg) >= 2 and msg[-2:] == self.delimiter:
+                    return msg[:-2]
+        except socket.error as e:
+            raise ConnectionError(f"Error receiving text: {e}") from e
 
-    def rx_txt_check_error(self, chunksize: int = 4096, stop: bool = True):
+    def rx_txt_check_error(self, chunksize: int = 4096, stop: bool = True) -> str:
         """Receive text string and return it after removing the delimiter.
         Check for error."""
         msg = self.rx_txt(chunksize)
         self.check_error(stop)
         return msg
 
-    def rx_arb(self):
-        """ Recieve binary data from scpi server"""
-        numOfBytes = 0
-        data=b''
-        while len(data) != 1:
-            data = self._socket.recv(1)
-        if data != b'#':
-            return False
-        data=b''
+    def rx_arb(self) -> Union[bytes, bool]:
+        """Receive binary data from SCPI server.
+        
+        Returns:
+            Binary data or False if failed
+            
+        Raises:
+            ConnectionError: If not connected to device
+        """
+        self._ensure_connected()
+        
+        try:
+            # Read header byte '#'
+            data = b''
+            while len(data) != 1:
+                chunk = self._socket.recv(1)  # type: ignore
+                if not chunk:
+                    raise ConnectionError("Connection closed while reading header")
+                data = chunk
+            if data != b'#':
+                return False
+            
+            # Read number of length digits
+            data = b''
+            while len(data) != 1:
+                chunk = self._socket.recv(1)  # type: ignore
+                if not chunk:
+                    raise ConnectionError("Connection closed while reading length specification")
+                data = chunk
+            numOfNumBytes = int(data)
+            if numOfNumBytes <= 0:
+                return False
+            
+            # Read length
+            data = b''
+            while len(data) != numOfNumBytes:
+                chunk = self._socket.recv(1)  # type: ignore
+                if not chunk:
+                    raise ConnectionError("Connection closed while reading data length")
+                data += chunk
+            numOfBytes = int(data)
+            
+            # Read actual data
+            data = b''
+            while len(data) < numOfBytes:
+                r_size = min(numOfBytes - len(data), 4096 * 1024)
+                chunk = self._socket.recv(r_size)  # type: ignore
+                if not chunk:
+                    raise ConnectionError("Connection closed while reading data")
+                data += chunk
 
-        while len(data) != 1:
-            data = self._socket.recv(1)
-        numOfNumBytes = int(data)
-        if numOfNumBytes <= 0:
-            return False
-        data=b''
+            # Receive trailing \r\n
+            try:
+                self._socket.recv(2)  # type: ignore
+            except socket.error:
+                pass  # Don't fail if trailing bytes are missing
 
-        while len(data) != numOfNumBytes:
-            data += (self._socket.recv(1))
-        numOfBytes = int(data)
-        data=b''
+            return data
+            
+        except (socket.error, ValueError) as e:
+            raise ConnectionError(f"Error receiving binary data: {e}") from e
 
-        while len(data) < numOfBytes:
-            r_size = min(numOfBytes - len(data),4096)
-            data += (self._socket.recv(r_size))
-
-        self._socket.recv(2)        # recive \r\n
-
-        return data
-
-    def rx_arb_check_error(self, stop: bool = True):
+    def rx_arb_check_error(self, stop: bool = True) -> Union[bytes, bool]:
         """ Recieve binary data from scpi server. Check for error."""
         data = self.rx_arb()
         self.check_error(stop)
         return data
 
-    def tx_txt(self, msg: str):
-        """Send text string ending and append delimiter."""
-        return self._socket.sendall((msg + self.delimiter).encode('utf-8'))     # was send(().encode('utf-8'))
+    def tx_txt(self, msg: str) -> None:
+        """Send text string with delimiter appended.
+        
+        Args:
+            msg: Text message to send
+            
+        Raises:
+            ConnectionError: If not connected to device or communication fails
+        """
+        self._ensure_connected()
+        
+        try:
+            self._socket.sendall((msg + self.delimiter).encode('utf-8'))  # type: ignore
+        except socket.error as e:
+            raise ConnectionError(f"Error sending text: {e}") from e
 
     def tx_txt_check_error(self, msg: str, stop: bool= True):
         """Send text string ending and append delimiter. Check for error."""
         self.tx_txt(msg)
         self.check_error(stop)
 
-    def txrx_txt(self, msg: str):
+    def txrx_txt(self, msg: str) -> str:
         """Send/receive text string."""
         self.tx_txt(msg)
         return self.rx_txt()
 
-    def check_error(self, stop = True):
-        """Read error from Red Pitaya and print it."""
-        res = int(self.stb_q())
-        if (res & 0x4):
-            while 1:
-                err = self.err_n()
-                if (err.startswith('0,')):
-                    break
-                print(err)
-                n = err.split(",")
-                if (len(n) > 0 and stop and int(n[0]) > 9500):
-                    exit(1)
+    def check_error(self, stop: bool = True) -> None:
+        """Check for SCPI errors and optionally raise exception on critical errors.
+        
+        Args:
+            stop: Whether to raise exception on critical errors (code > 9500)
+            
+        Raises:
+            SCPICriticalError: On critical errors if stop=True
+            ConnectionError: If communication fails
+        """
+        try:
+            stb_result = self.stb_q()
+            if stb_result is None:
+                return
+                
+            res = int(stb_result)
+            if res & 0x4:  # Error queue not empty
+                while True:
+                    err = self.err_n()
+                    if err is None:
+                        break
+                        
+                    if err.startswith('0,'):
+                        break
+                        
+                    print(f"SCPI Error: {err}")
+                    
+                    try:
+                        error_parts = err.split(",")
+                        if len(error_parts) > 0 and stop:
+                            error_code = int(error_parts[0])
+                            if error_code > 9500:
+                                raise SCPICriticalError(f"Critical SCPI error {error_code}: {err}", error_code)
+                    except (ValueError, IndexError):
+                        pass  # Could not parse error code, continue
+                        
+        except (ConnectionError, socket.error) as e:
+            if stop:
+                raise ConnectionError(f"Error during error checking: {e}") from e
 
 
     ###########################################
@@ -270,19 +474,17 @@ class scpi (object):
     def board_info(
         self
     ) -> List[str]:
-        """
-        Returns Red Pitaya board ID and model name.
-        """
-        settings = []
+        """Returns Red Pitaya board ID, model name, and OS version.
 
-        settings.append(self.txrx_txt('SYSTem:BRD:ID?'))
-        settings.append(self.txrx_txt('SYSTem:BRD:Name?'))
+        Returns:
+            List[str]: ``[board_id, board_name, os_version]``.
+        """
+        settings = [
+            self.txrx_txt('SYSTem:BRD:ID?'),
+            self.txrx_txt('SYSTem:BRD:Name?'),
+            self.txrx_txt('SYSTem:VERSion?'),
+        ]
         self.check_error()
-
-        #? Remove prints?
-        print(f"Red Pitaya board ID: {settings[0]}")
-        print(f"Red Pitaya board Name: {settings[1]}")
-
         return settings
 
     def board_set_date_time(
@@ -347,128 +549,102 @@ class scpi (object):
 
     def daisy_set(
         self,
-        x_channel: bool = False,
-        click_shield: bool = False,
-        trig_mode: Optional[str] = None
+        mode: DaisyMode,
+        trig_mode: Optional[DaisyTrigMode] = None
     ) -> None:
         """
-        Configure the settings for the daisy chain for the selected Red Pitaya board configuration.
+        Configure the daisy chain synchronisation mode for Red Pitaya.
 
         Args:
-            x_channel (bool, optional): Set to `True` if using X-channel system. Defaults to False.
-            click_shield (bool, optional): Set to `True` if using Red Pitaya Click Shields. Defaults to False.
-            trig_mode (str, optional): Trigger source to be shared (either "adc" or "dac"). Click Shields only. Defaults to None.
+            mode (DaisyMode): Synchronisation method.
+                - ``DaisyMode.X_CHANNEL``    — X-channel system 1.0 (SATA-based clock + trigger
+                                               sync). Only available on STEMlab 125-14.
+                - ``DaisyMode.X_CHANNEL_V2`` — X-channel system 2.0 (formerly Click Shield
+                                               synchronisation). Available on all boards.
+            trig_mode (DaisyTrigMode, optional): Trigger source shared over DIO0_N
+                (``ADC`` or ``DAC``). Applies to ``DaisyMode.X_CHANNEL_V2`` only.
+                Defaults to None.
         """
-        trig_mode_list = ["ADC", "DAC"]
-
-        # Check for errors
-        if trig_mode is not None and trig_mode.upper() not in trig_mode_list:
-            raise ValueError(f"{trig_mode.upper()} is not a defined trigger source")
-    
-        if x_channel:
-            # Set up X-channel daisy chain
+        if mode == DaisyMode.X_CHANNEL:
             self.tx_txt("DAISY:SYNC:CLK ON")
             self.tx_txt("DAISY:SYNC:TRIG ON")
-
-        elif click_shield:
-            # Set up Click Shield daisy chain
+        elif mode == DaisyMode.X_CHANNEL_V2:
             self.tx_txt("DAISY:TRig:Out:ENable ON")
             if trig_mode is not None:
-                self.tx_txt(f"DAISY:TRig:Out:SOUR {trig_mode.upper()}")
+                self.tx_txt(f"DAISY:TRig:Out:SOUR {trig_mode.value}")
         self.check_error()
 
     def daisy_get_settings(
-        self
-    ) -> List[str | None]:
+        self,
+        board: BoardModel = BoardModel.STEMLAB_125_14
+    ) -> List[str]:
         """
-        Returns the current Daisy chain settings
-        [clk_sync, trig_sync, trig_out_en, trig_out_sour]
+        Returns the current Daisy chain settings.
+
+        For ``BoardModel.STEMLAB_125_14`` (X-channel 1.0 capable), returns:
+            [clk_sync, trig_sync, trig_out_en, trig_out_sour]
+        For all other boards (X-channel 2.0 only), returns:
+            [trig_out_en, trig_out_sour]
+
+        Args:
+            board (BoardModel, optional): Board model. Defaults to STEMLAB_125_14.
 
         Returns:
-            str: Daisy chain settings.
+            List[str]: Daisy chain settings.
         """
-        settings = [
-            self.txrx_txt("DAISY:SYNC:CLK?"),
-            self.txrx_txt("DAISY:SYNC:TRIG?"),
-            self.txrx_txt("DAISY:TRig:Out:ENable?"),
-            self.txrx_txt("DAISY:TRig:Out:SOUR?")
-        ]
+        settings = []
+
+        if board == BoardModel.STEMLAB_125_14:
+            settings.append(self.txrx_txt("DAISY:SYNC:CLK?"))
+            settings.append(self.txrx_txt("DAISY:SYNC:TRIG?"))
+            settings.append(self.txrx_txt("DAISY:TRig:Out:ENable?"))
+            settings.append(self.txrx_txt("DAISY:TRig:Out:SOUR?"))
+        else:
+            settings.append(self.txrx_txt("DAISY:TRig:Out:ENable?"))
+            settings.append(self.txrx_txt("DAISY:TRig:Out:SOUR?"))
+
         self.check_error()
-
-        #? Remove prints?
-        print(f"SATA clock sync: {settings[0]}")
-        print(f"SATA trigger sync: {settings[1]}")
-        print(f"DIO0_N trigger output enable: {settings[2]}")
-        print(f"Trigger output source: {settings[3]}")
-
         return settings
 
 
     ### PLL ###
 
-    def pll_enable(
+    def pll_set(
         self,
-        siglab: bool = False
+        enable: bool
     ) -> None:
         """
-        Enables Phase Locked Loop control on SIGNALlab 250-12. This syncs the SIGNALlab 250-12 with the 10 MHz
-        reference clock supplyied through the SMA connector on the back of the unit.
+        Enables or disables Phase Locked Loop control on SIGNALlab 250-12.
+        Syncs the board with the 10 MHz reference clock on the rear SMA connector.
+
+        Note:
+            SIGNALlab 250-12 only. Calling on other board models will result in an
+            SCPI error or no response from the device.
 
         Args:
-            siglab (bool, optional): Set to true if using SIGNALlab 250-12. Defaults to `False`.
+            enable (bool): True to enable PLL, False to disable.
         """
-        if siglab:
-            self.tx_txt("RP:PLL:ENable ON")
-            self.check_error()
-        else:
-            print("PLL is only available on SIGNALlab 250-12")
-
-    def pll_disable(
-        self,
-        siglab: bool = False
-    ) -> None:
-        """
-        Disables Phase Locked Loop control on SIGNALlab 250-12. This syncs the SIGNALlab 250-12 with the 10 MHz
-        reference clock supplyied through the SMA connector on the back of the unit.
-
-        Args:
-            siglab (bool, optional): Set to true if using SIGNALlab 250-12. Defaults to `False`.
-        """
-
-        if siglab:
-            self.tx_txt("RP:PLL:ENable OFF")
-            self.check_error()
-        else:
-            print("PLL is only available on SIGNALlab 250-12")
+        self.tx_txt(f"RP:PLL:ENable {'ON' if enable else 'OFF'}")
+        self.check_error()
 
     def pll_get_state(
-        self,
-        siglab: bool = False
-    ) -> List[str | None]:
+        self
+    ) -> List[str]:
         """
-        Returns whether PLL control is enables and the status of the PLL lock to the 10 MHz reference clock
-        supplyied through the SMA connector on the back of the unit.
-        Only available on SIGNALlab 250-12.
+        Returns whether PLL is enabled and whether it is locked to the 10 MHz
+        reference clock on the rear SMA connector.
 
-        Args:
-            siglab (bool, optional): Set to true if using SIGNALlab 250-12. Defaults to `False`.
+        Note:
+            SIGNALlab 250-12 only. Calling on other board models may result in an
+            SCPI error or no response from the device.
+
+        Returns:
+            List[str]: [pll_enable, pll_state]
         """
-
-        settings = []
-
-        if siglab:
-            pll_enable = self.txrx_txt("RP:PLL:ENable?")
-            pll_state = self.txrx_txt("RP:PLL:STATE?")
-            self.check_error()
-            settings = [pll_enable, pll_state]
-
-        #? Remove prints?
-            print(f"PLL Enable: {settings[0]}")
-            print(f"PLL synchronisation status: {settings[1]}")
-        else:
-            print("PLL is only available on SIGNALlab 250-12")
-
-        return settings
+        pll_enable = self.txrx_txt("RP:PLL:ENable?")
+        pll_state  = self.txrx_txt("RP:PLL:STATE?")
+        self.check_error()
+        return [pll_enable, pll_state]
 
 
     ### GENERATOR ###
@@ -479,87 +655,63 @@ class scpi (object):
         self,
         chan: int,
         func: Waveform = Waveform.SINE,
-        volt: float = 1,
+        ampl: float = 1,
         freq: float = 1000,
         offset: Optional[float] = None,
         phase: Optional[float] = None,
         dcyc: Optional[float] = None,
         data: Optional[np.ndarray] = None,
-        trig_sour: Optional[TriggerSource] = None,
-        ext_trig_deb_us: Optional[int] = None,
-        ext_trig_lev: Optional[float] = None,
-        load: Optional[Load] = None,
-        sdrlab: bool = False,
-        siglab: bool = False
+        load: Optional[GenLoad] = None,
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
-
         """
-        Set the parameters for signal generator on one channel.
+        Set the waveform parameters for signal generator on one channel.
+
+        Use :meth:`gen_trig_set` to configure the trigger source and
+        external trigger settings.
 
         Args:
-            chan (int) :
+            chan (int):
                 Output channel (either 1 or 2).
-            func (str, optional) :
+            func (Waveform, optional):
                 Waveform of the signal (SINE, SQUARE, TRIANGLE, SAWU,
                 SAWD, PWM, ARBITRARY, DC, DC_NEG).
-                Defaults to `sine`.
-            volt (int, optional) :
-                Amplitude of signal {-1, 1} Volts. {-5, 5} for SIGNALlab 250-12.
+                Defaults to ``Waveform.SINE``.
+            ampl (float, optional):
+                Amplitude of signal {-1, 1} V. {-5, 5} V for SIGNALlab 250-12.
                 Defaults to 1.
-            freq (int, optional) :
-                Frequency of signal. Not relevant if 'func' is "DC" or "DC_NEG".
+            freq (float, optional):
+                Frequency of signal. Not relevant if ``func`` is DC or DC_NEG.
                 Defaults to 1000.
-            offset (int, optional) :
-                Signal offset {-1, 1} Volts. {-5, 5} for SIGNALlab 250-12.
-                Defaults to 0 (None).
-            phase (int, optional) :
+            offset (float, optional):
+                Signal offset {-1, 1} V. {-5, 5} V for SIGNALlab 250-12.
+                Defaults to None (0 V).
+            phase (float, optional):
                 Phase of signal {-360, 360} degrees.
-                Defaults to 0 (None).
-            dcyc (float, optional) :
-                Duty cycle, where 1 corresponds to 100%.
-                Defaults to 0.5 (None).
-            data (ndarray, optional) :
-                Numpy ``ndarray`` of max 16384 values, floats in range {-1,1}
-                (or {-5,5} for SIGNALlab).
-                Define the custom waveform if "func" is "ARBITRARY".
-                Defaults to `None`.
-            trig_sour (str, optional):
-                Trigger source (EXT_PE, EXT_NE, INT, GATED).
-                Defaults to `int` (internal).
-            ext_trig_deb_us (int, optional):
-                External trigger debounce filter length in microseconds. Pulses shorter
-                than the setting will not count as a triggering moment.
-                Defaults to 500 (None).
-            ext_trig_lev (float, optional):
-                External trigger level in Volts.
-                Defaults to 1 (None).
-                (SIGNALlab 250-12 only).
-            load (str, optional):
+                Defaults to None (0°).
+            dcyc (float, optional):
+                Duty cycle {0, 1} where 1 corresponds to 100%. PWM waveform only.
+                Defaults to None (0.5).
+            data (ndarray, optional):
+                Numpy array of max 16384 floats in range {-1, 1} (or {-5, 5} for
+                SIGNALlab 250-12). Used when ``func`` is ``Waveform.ARBITRARY``.
+                Defaults to None.
+            load (GenLoad, optional):
                 Expected generator load (INF or L50).
-                Defaults to `INF`.
-                (SIGNALlab 250-12 only).
-            sdrlab (bool, optional):
-                `True` if operating with SDRlab 122-16.
-                Defaults to `False`.
-            siglab (bool, optional):
-                `True` if operating with SIGNALlab 250-12.
-                Defaults to `False`.
-
-        The settings will work on any Red Pitaya board. If operating on a board
-        other than STEMlab 125-14, change the bool value of the appropriate
-        parameter to true (sdrlab, siglab)
+                SIGNALlab 250-12 and STEMlab 125-14 Gen2 only.
+                Defaults to None (INF).
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_gen_set_params(chan, func, volt, freq, offset, phase, dcyc, data, trig_sour, ext_trig_deb_us, ext_trig_lev, load, sdrlab, siglab)
+        self._validate_gen_set_params(chan, func, ampl, freq, offset, phase, dcyc, data, load, board)
 
-        # Load needs to be set before the amplitude
-        if siglab:
-            if ext_trig_lev is not None:
-                self.tx_txt(f"TRig:EXT:LEV {ext_trig_lev}")
+        # Load must be set before amplitude
+        if board in (BoardModel.SIGNALLAB_250_12, BoardModel.STEMLAB_125_14_GEN2, BoardModel.STEMLAB_125_14_PRO_Z7020_GEN2):
             if load is not None:
                 self.tx_txt(f"SOUR{chan}:LOAD {load.value}")
 
         self.tx_txt(f"SOUR{chan}:FUNC {func.value}")
-        self.tx_txt(f"SOUR{chan}:VOLT {volt}")
+        self.tx_txt(f"SOUR{chan}:VOLT {ampl}")
 
         if func not in {Waveform.DC, Waveform.DC_NEG}:
             self.tx_txt(f"SOUR{chan}:FREQ:FIX {freq}")
@@ -573,41 +725,69 @@ class scpi (object):
         if data is not None and func == Waveform.ARBITRARY:
             cust_wf = ",".join(map(str, data))
             self.tx_txt(f"SOUR{chan}:TRAC:DATA:DATA {cust_wf}")
-        if trig_sour is not None:
-            self.tx_txt(f"SOUR{chan}:TRig:SOUR {trig_sour.value}")
-        if ext_trig_deb_us is not None:
-            self.tx_txt(f"SOUR:TRig:EXT:DEBouncer:US {ext_trig_deb_us}")
 
         self.check_error()
 
-    def gen_get_settings(self, chan: int, siglab: bool = False) -> List[str | None]:
+    def gen_trig_set(
+        self,
+        chan: int,
+        trig_sour: Optional[TriggerSource] = None,
+        ext_trig_deb_us: Optional[int] = None,
+        ext_trig_lev: Optional[float] = None,
+        board: BoardModel = BoardModel.STEMLAB_125_14
+    ) -> None:
         """
-        Retrieves generator settings of one channel from Red Pitaya, prints them in the console and return
-        an array with the following sequence:
-        [func, volt, freq, offs, phas, dcyc, trig_sour, ext_trig_deb_us, ext_trig_lev, load]
+        Set the trigger parameters for signal generator on one channel.
 
-            Func            - Signal waveform (sine, triangle, square, ...)
-            Voltage         - One-way amplitude
-            Freq            - Signal frequency
-            Offs            - Offset from zero
-            Phas            - Phase delay
-            Dcyc            - Duty Cycle
-            Trig_sour       - Trigger source
-            Ext_trig_deb_us - External trigger debounce filter value in microseconds. Common for both channels.
-            Ext_trig_lev    - External trigger level (SIGNALlab only). Common for both channels.
-            Load            - Generator load setting (SIGNALlab only)
-
-        Checks and displays SCPI command errors.
+        Use :meth:`gen_set` to configure the waveform shape and output
+        settings.
 
         Args:
             chan (int):
                 Output channel (either 1 or 2).
-            siglab (bool, optional):
-                Set to `True` if using SIGNALlab 250-12, otherwise leave blank.
+            trig_sour (TriggerSource, optional):
+                Trigger source (EXT_PE, EXT_NE, INT).
+                Defaults to None (no change).
+            ext_trig_deb_us (int, optional):
+                External trigger debounce filter length in microseconds.
+                Shared across both channels.
+                Defaults to None (no change; board default 500 µs).
+            ext_trig_lev (float, optional):
+                External trigger level in Volts. SIGNALlab 250-12 only.
+                Defaults to None (no change; board default 1 V).
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
+        """
+        self._validate_gen_trig_set_params(chan, trig_sour, ext_trig_deb_us, ext_trig_lev, board)
+
+        if trig_sour is not None:
+            self.tx_txt(f"SOUR{chan}:TRig:SOUR {trig_sour.value}")
+        if ext_trig_deb_us is not None:
+            self.tx_txt(f"SOUR:TRig:EXT:DEBouncer:US {ext_trig_deb_us}")
+        if board == BoardModel.SIGNALLAB_250_12:
+            if ext_trig_lev is not None:
+                self.tx_txt(f"TRig:EXT:LEV {ext_trig_lev}")
+
+        self.check_error()
+
+    def gen_get_settings(
+        self,
+        chan: int,
+        board: BoardModel = BoardModel.STEMLAB_125_14
+    ) -> List[str]:
+        """Retrieves waveform settings of one generator channel from Red Pitaya.
 
         Returns:
-            str: Generator settings for the specified channel.
+            List[str]: ``[func, volt, freq, offs, phas, dcyc, (load)]``.
+            ``load`` is only present for SIGNALlab 250-12 and STEMlab Gen2 (index 6).
+
+        Use :meth:`gen_get_trig_settings` to read back trigger settings.
+
+        Args:
+            chan (int): Output channel (either 1 or 2).
+            board (BoardModel, optional): Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
+        self._validate_channel(chan)
 
         settings = [
             self.txrx_txt(f"SOUR{chan}:FUNC?"),
@@ -616,49 +796,55 @@ class scpi (object):
             self.txrx_txt(f"SOUR{chan}:VOLT:OFFS?"),
             self.txrx_txt(f"SOUR{chan}:PHAS?"),
             self.txrx_txt(f"SOUR{chan}:DCYC?"),
-            self.txrx_txt(f"SOUR{chan}:TRig:SOUR?"),
-            self.txrx_txt("SOUR:TRig:EXT:DEBouncer:US?")
         ]
 
-        if siglab:
-            settings.append(self.txrx_txt("TRig:EXT:LEV?"))
+        if board in (BoardModel.SIGNALLAB_250_12, BoardModel.STEMLAB_125_14_GEN2, BoardModel.STEMLAB_125_14_PRO_Z7020_GEN2):
             settings.append(self.txrx_txt(f"SOUR{chan}:LOAD?"))
 
         self.check_error()
+        return settings
 
-        #? Remove prints? Repace with logging?
-        print(f"Generator channel {chan} settings:")
-        print(f"Waveform/function: {settings[0]}")
-        print(f"Amplitude: {settings[1]} V")    
-        print(f"Frequency: {settings[2]} Hz")
-        print(f"Offset: {settings[3]} V")
-        print(f"Phase: {settings[4]} deg")
-        print(f"Duty Cycle: {settings[5]}")
-        print(f"Trigger source: {settings[6]}")
-        print(f"External trigger debouncer filter: {settings[7]} us")
+    def gen_get_trig_settings(
+        self,
+        chan: int,
+        board: BoardModel = BoardModel.STEMLAB_125_14
+    ) -> List[str]:
+        """Retrieves trigger settings of one generator channel from Red Pitaya.
 
-        if siglab:
-            print(f"External trigger level: {settings[8]} V")
-            print(f"Load: {settings[9]}")
+        Returns:
+            List[str]: ``[trig_sour, ext_trig_deb_us, (ext_trig_lev)]``.
+            ``ext_trig_lev`` is only present for SIGNALlab 250-12 (index 2).
 
+        Use :meth:`gen_get_settings` to read back waveform settings.
+
+        Args:
+            chan (int): Output channel (either 1 or 2).
+            board (BoardModel, optional): Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
+        """
+        self._validate_channel(chan)
+
+        settings = [
+            self.txrx_txt(f"SOUR{chan}:TRig:SOUR?"),
+            self.txrx_txt("SOUR:TRig:EXT:DEBouncer:US?"),
+        ]
+
+        if board == BoardModel.SIGNALLAB_250_12:
+            settings.append(self.txrx_txt("TRig:EXT:LEV?"))
+
+        self.check_error()
         return settings
 
     # Burst
-    def gen_burst_enable(self, chan: int) -> None:
+    def gen_burst_mode(self, chan: int, enable: bool) -> None:
         """
-        Enables burst mode for the specified channel.
-        """
+        Enables or disables burst mode for the specified channel.
 
-        self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:BURS:STAT BURST")
-        self.check_error()
-
-    def gen_burst_disable(self, chan: int) -> None:
-        """
-        Disables burst mode for the specified channel.
+        Args:
+            chan (int): Output channel (1 or 2).
+            enable (bool): True to enable burst mode, False to return to continuous mode.
         """
         self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:BURS:STAT CONTINUOUS")
+        self.tx_txt(f"SOUR{chan}:BURS:STAT {'BURST' if enable else 'CONTINUOUS'}")
         self.check_error()
 
     def gen_burst_set(
@@ -669,7 +855,7 @@ class scpi (object):
         period: Optional[int] = None,
         init_val: float = 0,
         last_val: float = 0,
-        siglab: bool = False
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
         """
         Set the parameters for burst mode on one channel. Generate "nor" number of "ncyc" periods with total time "period". 
@@ -696,13 +882,10 @@ class scpi (object):
                 End value of the burst signal in Volts. The line will stay on this
                 voltage until a new burst is generated.
                 Defaults to 0.
-            siglab (bool, optional): 
-                Set to `True` if using SIGNALlab 250-12, otherwise leave blank.
-                Defaults to `False`.
-
-            The settings will work on any Red Pitaya board.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_burst_params(chan, ncyc, nor, period, init_val, last_val, siglab)
+        self._validate_burst_params(chan, ncyc, nor, period, init_val, last_val, board)
 
         self.tx_txt(f"SOUR{chan}:BURS:STAT BURST")
         self.tx_txt(f"SOUR{chan}:BURS:NCYC {ncyc}")
@@ -712,50 +895,28 @@ class scpi (object):
             self.tx_txt(f"SOUR{chan}:BURS:INT:PER {period}")
 
         self.tx_txt(f"SOUR{chan}:BURS:LASTValue {last_val}")
-        self.tx_txt(f"SOUR{chan}:INITValue {init_val}")
+        self.tx_txt(f"SOUR{chan}:BURS:INITValue {init_val}")
 
         self.check_error()
 
-    def gen_get_burst_settings(self, chan: int) -> List[str | None]:
-        """
-        Retrieves burst generator settings of one channel from Red Pitaya, prints them in the console and returns
-        an array with the following sequence:
-        [mode, ncyc, nor, period, init_val, last_val]
+    def gen_get_burst_settings(self, chan: int) -> List[str]:
+        """Retrieves burst generator settings of one channel from Red Pitaya.
 
-            Mode        - Generator mode (burst/continuous)
-            Ncyc        - Number of signal periods in one burst (number of cycles)
-            Nor         - Number of repeated bursts (number of repetitions)
-            Period      - Total time of one burst in µs. Includes the signl and delay between two consecutive bursts.
-            Init_val    - Starting value of the burst signal in Volts.
-            Last_val    - End value of the burst signal in Volts.
+        Returns:
+            List[str]: ``[mode, ncyc, nor, period, init_val, last_val]``.
 
         Args:
             chan (int): Output channel (either 1 or 2).
-
-        Returns:
-            str: Burst generator settings for the specified channel.
         """
-
         settings = [
             self.txrx_txt(f"SOUR{chan}:BURS:STAT?"),
             self.txrx_txt(f"SOUR{chan}:BURS:NCYC?"),
             self.txrx_txt(f"SOUR{chan}:BURS:NOR?"),
             self.txrx_txt(f"SOUR{chan}:BURS:INT:PER?"),
             self.txrx_txt(f"SOUR{chan}:BURS:INITValue?"),
-            self.txrx_txt(f"SOUR{chan}:LASTValue?")
+            self.txrx_txt(f"SOUR{chan}:BURS:LASTValue?")
         ]
-
         self.check_error()
-
-        #? Remove prints? Repace with logging?
-        print(f"Generator channel {chan} burst settings:")
-        print(f"Burst mode: {settings[0]}")
-        print(f"NCYC: {settings[1]}")
-        print(f"NOR: {settings[2]}")
-        print(f"Period: {settings[3]} us")
-        print(f"Init value: {settings[4]} V")
-        print(f"Last value: {settings[5]} V")
-
         return settings
 
     # Sweeep
@@ -767,7 +928,9 @@ class scpi (object):
         time_us: int = 1,
         mode: SweepMode = SweepMode.LINEAR,
         direction: SweepDirection = SweepDirection.NORMAL,
-        sdrlab: bool = False
+        inf_rep: bool = False,
+        rep_count: int = 1,
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
         """
         Set the parameters for sweep mode on one channel.
@@ -786,17 +949,21 @@ class scpi (object):
                 the full sweep from ``start_freq`` to ``stop_freq``. When a direction different than
                 "NORMAL", it indicates the sweep time in one direction.
                 Defaults to 1.
-            mode (str, optional):
-                Either linear ("LINEAR") or logarithmic("LOG"). Defaults to "LINEAR".
-            dir (str, optional):
-                Sweep direction ("NORMAL" or "UP_DOWN"). Defaults to "NORMAL".
-            sdrlab (bool, optional):
-                `True` if operating with SDRlab 122-16. Defaults to `False`.
-        
-        The settings will work on any Red Pitaya board.
+            mode (SweepMode, optional):
+                Either linear (``SweepMode.LINEAR``) or logarithmic (``SweepMode.LOG``).
+                Defaults to ``SweepMode.LINEAR``.
+            direction (SweepDirection, optional):
+                Sweep direction (``SweepDirection.NORMAL`` or ``SweepDirection.UP_DOWN``).
+                Defaults to ``SweepDirection.NORMAL``.
+            inf_rep (bool, optional):
+                True if the sweep should be infinitely repeated. Defaults to False.
+            rep_count (int, optional):
+                Number of repetitions for the sweep when ``inf_rep`` is False. Defaults to 1.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
 
-        self._validate_sweep_params(chan, start_freq, stop_freq, time_us, mode, direction, sdrlab)
+        self._validate_sweep_params(chan, start_freq, stop_freq, time_us, mode, direction, inf_rep, rep_count, board)
 
         self.tx_txt(f"SOUR{chan}:SWeep:STATE ON")
         self.tx_txt(f"SOUR{chan}:SWeep:FREQ:START {start_freq}")
@@ -805,27 +972,23 @@ class scpi (object):
         self.tx_txt(f"SOUR{chan}:SWeep:MODE {mode.value}")
         self.tx_txt(f"SOUR{chan}:SWeep:DIR {direction.value}")
 
+        if inf_rep:
+            self.tx_txt(f"SOUR{chan}:SWeep:REP:INF ON")
+        else:
+            self.tx_txt(f"SOUR{chan}:SWeep:REP:INF OFF")
+            self.tx_txt(f"SOUR{chan}:SWeep:REP:COUNT {rep_count}")
+
         self.check_error()
 
-    def gen_get_sweep_settings(self, chan: int) -> List[str | None]:
+    def gen_get_sweep_settings(self, chan: int) -> List[str]:
+        """Retrieves sweep mode settings of one channel from Red Pitaya.
+
+        Returns:
+            List[str]: ``[state, start_freq, stop_freq, time_us, mode, dir]``.
+
+        Args:
+            chan (int): Output channel (either 1 or 2).
         """
-        Retrieves sweep mode settings of one channel from Red Pitaya, prints them in the console and returns
-        an array with the following sequence:
-        [state, start_freq, stop_freq, time_us, mode, dir]
-
-            State       - State of sweep mode generator (ON/OFF)
-            Start_freq  - Sweep start frequency 
-            Stop_freq   - Sweep stop frequency
-            Time_us     - Sweep time in us
-            Mode        - Sweep mode
-            Dir         - Sweep direction
-
-        Parameters
-        ----------
-            channel (int): Output channel (either 1 or 2).
-
-        """
-
         settings = [
             self.txrx_txt(f"SOUR{chan}:SWeep:STATE?"),
             self.txrx_txt(f"SOUR{chan}:SWeep:FREQ:START?"),
@@ -834,49 +997,31 @@ class scpi (object):
             self.txrx_txt(f"SOUR{chan}:SWeep:MODE?"),
             self.txrx_txt(f"SOUR{chan}:SWeep:DIR?")
         ]
-
         self.check_error()
-
-        #? Remove prints? Repace with logging?
-        print(f"Sweep mode state: {settings[0]}")
-        print(f"Sweep start frequency: {settings[1]}")
-        print(f"Sweep stop frequency: {settings[2]}")
-        print(f"Sweep time: {settings[3]}")
-        print(f"Sweep mode: {settings[4]}")
-        print(f"Sweep direction: {settings[5]}")
-
         return settings
 
-    def gen_sweep_enable(self, chan: int) -> None:
+    def gen_sweep_state(self, chan: int, enable: bool) -> None:
         """
-        Enables sweep mode for the specified channel.
+        Enables or disables sweep mode for the specified channel.
+
+        Args:
+            chan (int): Output channel (1 or 2).
+            enable (bool): True to enable sweep mode, False to disable.
         """
         self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:SWeep:STATE ON")
+        self.tx_txt(f"SOUR{chan}:SWeep:STATE {'ON' if enable else 'OFF'}")
         self.check_error()
 
-    def gen_sweep_disable(self, chan: int) -> None:
+    def gen_sweep_pause(self, chan: int, pause: bool) -> None:
         """
-        Disables sweep mode for the specified channel.
-        """
-        self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:SWeep:STATE OFF")
-        self.check_error()
+        Pauses or resumes sweep mode for the specified channel.
 
-    def gen_sweep_pause(self, chan: int) -> None:
-        """
-        Pauses the sweep mode for the specified channel.
-        """
-        self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:SWeep:PAUSE ON")
-        self.check_error()
-
-    def gen_sweep_resume(self, chan: int) -> None:
-        """
-        Resumes the sweep mode for the specified channel.
+        Args:
+            chan (int): Output channel (1 or 2).
+            pause (bool): True to pause, False to resume.
         """
         self._validate_channel(chan)
-        self.tx_txt(f"SOUR{chan}:SWeep:PAUSE OFF")
+        self.tx_txt(f"SOUR{chan}:SWeep:PAUSE {'ON' if pause else 'OFF'}")
         self.check_error()
 
 
@@ -885,54 +1030,82 @@ class scpi (object):
         self,
         chan: int,
         func: Waveform,
-        volt: float,
+        ampl: float,
         freq: float,
         offset: Optional[float],
         phase: Optional[float],
         dcyc: Optional[float],
         data: Optional[np.ndarray],
-        trig_sour: Optional[TriggerSource],
-        ext_trig_deb_us: Optional[int],
-        ext_trig_lev: Optional[float],
-        load: Optional[Load],
-        sdrlab: bool,
-        siglab: bool
+        load: Optional[GenLoad],
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for gen_set function.
         """
-        waveform_list = [e.value for e in Waveform]
-        trigger_list = [e.value for e in TriggerSource]
-        load_list = [e.value for e in Load]
         buff_size = 16384
 
-        volt_lim = 5 if siglab else 1
-        offs_lim = 5 if siglab else 1
+        volt_lim = 5 if board == BoardModel.SIGNALLAB_250_12 else 1
         phase_lim = 360
-        freq_up_lim = 60e6 if sdrlab else 50e6
-        freq_down_lim = 300e3 if sdrlab else 0
+        freq_up_lim = 60e6 if board == BoardModel.SDRLAB_122_16 else 50e6
+        freq_down_lim = 300e3 if board == BoardModel.SDRLAB_122_16 else 0
 
-        assert chan in (1, 2), "Channel needs to be either 1 or 2"
-        assert func.value in waveform_list, f"{func.value} is not a defined waveform"
-        assert freq_down_lim <= freq <= freq_up_lim, f"Frequency is out of range {freq_down_lim, freq_up_lim} Hz"
-        assert abs(volt) <= volt_lim, f"Amplitude is out of range {-volt_lim, volt_lim} V"
+        if chan not in (1, 2):
+            raise ValueError("Channel needs to be either 1 or 2.")
+        if not (freq_down_lim <= freq <= freq_up_lim):
+            raise ValueError(f"Frequency {freq} Hz is out of range [{freq_down_lim}, {freq_up_lim}] Hz.")
+        if abs(ampl) > volt_lim:
+            raise ValueError(f"Amplitude {ampl} V is out of range [{-volt_lim}, {volt_lim}] V.")
         if offset is not None:
-            assert abs(offset) <= offs_lim, f"Offset is out of range {-offs_lim, offs_lim} V"
+            if abs(offset) > volt_lim:
+                raise ValueError(f"Offset {offset} V is out of range [{-volt_lim}, {volt_lim}] V.")
         if dcyc is not None:
-            assert 0 <= dcyc <= 1, "Duty Cycle is out of range {0, 1}"
+            if not (0 <= dcyc <= 1):
+                raise ValueError("Duty Cycle is out of range [0, 1].")
         if phase is not None:
-            assert abs(phase) <= phase_lim, f"Phase is out of range {-phase_lim, phase_lim} deg"
+            if abs(phase) > phase_lim:
+                raise ValueError(f"Phase {phase} deg is out of range [{-phase_lim}, {phase_lim}] deg.")
         if data is not None:
-            assert data.shape[0] <= buff_size, f"Data array is too long. Max length is {buff_size}"
-        if trig_sour is not None:
-            assert trig_sour.value in trigger_list, f"{trig_sour.value} is not a defined trigger source"
-        if ext_trig_deb_us is not None:
-            assert ext_trig_deb_us >= 1, f"External trigger debounce filter value {ext_trig_deb_us} is out of range. The minimal value is 1 microsecond"
-        if ext_trig_lev is not None:
-            assert abs(ext_trig_lev) <= volt_lim, f"External trigger level is out of range {-volt_lim, volt_lim} V"
+            if data.shape[0] > buff_size:
+                raise ValueError(f"Data array is too long. Max length is {buff_size}.")
         if load is not None:
-            assert load.value in load_list, f"{load.value} is not a defined load for SIGNALlab 250-12"
-        assert not (siglab and sdrlab), "Please select only one board option. 'siglab' and 'sdrlab' cannot be true at the same time."
+            _LOAD_BOARDS = (
+                BoardModel.SIGNALLAB_250_12,
+                BoardModel.STEMLAB_125_14_GEN2,
+                BoardModel.STEMLAB_125_14_PRO_Z7020_GEN2,
+                BoardModel.STEMLAB_125_14_TI,
+                BoardModel.STEMLAB_65_16_TI,
+            )
+            if board not in _LOAD_BOARDS:
+                raise ValueError(
+                    "Load setting is only available on SIGNALlab 250-12, "
+                    "STEMlab 125-14 Gen2, STEMlab 125-14 Pro Z7020 Gen2, STEMlab 125-14 TI, and STEMlab 65-16 TI."
+                )
+
+    def _validate_gen_trig_set_params(
+        self,
+        chan: int,
+        trig_sour: Optional[TriggerSource],
+        ext_trig_deb_us: Optional[int],
+        ext_trig_lev: Optional[float],
+        board: BoardModel
+    ) -> None:
+        """
+        Validate parameters for gen_trig_set function.
+        """
+        volt_lim = 5 if board == BoardModel.SIGNALLAB_250_12 else 1
+
+        if chan not in (1, 2):
+            raise ValueError("Channel needs to be either 1 or 2.")
+        if ext_trig_deb_us is not None:
+            if ext_trig_deb_us < 1:
+                raise ValueError(
+                    f"External trigger debounce filter value {ext_trig_deb_us} is out of range. The minimal value is 1 microsecond."
+                )
+        if ext_trig_lev is not None:
+            if board != BoardModel.SIGNALLAB_250_12:
+                raise ValueError("External trigger level setting is only available on SIGNALlab 250-12.")
+            if abs(ext_trig_lev) > volt_lim:
+                raise ValueError(f"External trigger level {ext_trig_lev} V is out of range [{-volt_lim}, {volt_lim}] V.")
 
     def _validate_burst_params(
         self,
@@ -942,20 +1115,25 @@ class scpi (object):
         period: Optional[int],
         init_val: float,
         last_val: float,
-        siglab: bool
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for gen_burst_set function.
         """
-        volt_lim = 5.0 if siglab else 1.0
+        volt_lim = 5.0 if board == BoardModel.SIGNALLAB_250_12 else 1.0
 
         self._validate_channel(chan)
-        assert ncyc >= 1, "NCYC minimum is 1"
-        assert nor >= 1, "NOR minimum is 1"
+        if ncyc < 1:
+            raise ValueError("NCYC minimum is 1.")
+        if nor < 1:
+            raise ValueError("NOR minimum is 1.")
         if period is not None:
-            assert period >= 1, "Minimal burst period 1 µs"
-        assert abs(last_val) <= volt_lim, f"Last value is out of range {-volt_lim, volt_lim} V"
-        assert abs(init_val) <= volt_lim, f"Init value is out of range {-volt_lim, volt_lim} V"
+            if period < 1:
+                raise ValueError("Minimal burst period is 1 µs.")
+        if abs(last_val) > volt_lim:
+            raise ValueError(f"Last value {last_val} V is out of range [{-volt_lim}, {volt_lim}] V.")
+        if abs(init_val) > volt_lim:
+            raise ValueError(f"Init value {init_val} V is out of range [{-volt_lim}, {volt_lim}] V.")
 
     def _validate_sweep_params(
         self,
@@ -965,27 +1143,38 @@ class scpi (object):
         time_us: int,
         mode: SweepMode,
         direction: SweepDirection,
-        sdrlab: bool
+        inf_rep: bool,
+        rep_count: int,
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for gen_sweep_set function.
         """
-        freq_up_lim = 60e6 if sdrlab else 50e6
-        freq_down_lim = 300e3 if sdrlab else 0
+        freq_up_lim = 60e6 if board == BoardModel.SDRLAB_122_16 else 50e6
+        freq_down_lim = 300e3 if board == BoardModel.SDRLAB_122_16 else 0
 
         self._validate_channel(chan)
-        assert freq_down_lim < start_freq <= freq_up_lim, f"Start frequency is out of range {freq_down_lim, freq_up_lim} Hz"
-        assert freq_down_lim < stop_freq <= freq_up_lim, f"Stop frequency is out of range {freq_down_lim, freq_up_lim} Hz"
-        assert start_freq < stop_freq, "Start frequency must be lower than Stop frequency"
-        assert time_us >= 1, "Minimal sweep period 1 µs"
-        assert mode in SweepMode, f"{mode.value} is not a defined sweep mode"
-        assert direction in SweepDirection, f"{direction.value} is not a defined sweep direction"
+        if not (freq_down_lim <= start_freq <= freq_up_lim):
+            raise ValueError(f"Start frequency {start_freq} Hz is out of range [{freq_down_lim}, {freq_up_lim}] Hz.")
+        if not (freq_down_lim <= stop_freq <= freq_up_lim):
+            raise ValueError(f"Stop frequency {stop_freq} Hz is out of range [{freq_down_lim}, {freq_up_lim}] Hz.")
+        if start_freq >= stop_freq:
+            raise ValueError("Start frequency must be lower than Stop frequency.")
+        if time_us < 1:
+            raise ValueError("Minimal sweep period is 1 µs.")
+        if not isinstance(inf_rep, bool):
+            raise ValueError("inf_rep must be a boolean.")
+        if rep_count < 1:
+            raise ValueError("Repetition count must be at least 1.")
 
     def _validate_channel(self, chan: int) -> None:
         """
         Validate the channel number.
         """
-        assert chan in (1, 2), "Channel needs to be either 1 or 2"
+        if chan not in (1, 2):
+            raise ValueError("Channel needs to be either 1 or 2.")
+
+
 
     ### ACQUISITION ###
 
@@ -994,59 +1183,43 @@ class scpi (object):
         dec: int = 1,
         units: Optional[Units] = None,
         data_format: Optional[DataFormat] = None,
+        byte_order: Optional[ByteOrder] = None,
         averaging: bool = True,
         gain: Optional[List[Gain]] = None,
         coupling: Optional[List[Coupling]] = None,
-        siglab: bool = False,
-        input4: bool = False
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
 
         """
         Set the parameters for the standard signal acquisition.
 
-        Parameters
-        -----------
-
-            dec (int, optional) : 
-                Decimation (1, 2, 4, 8, 16, 17, 18, ..., 65535, 65536)
+        Args:
+            dec (int, optional):
+                Decimation factor (1, 2, 4, 8, 16, 17, ..., 65536).
                 Defaults to 1.
-            units (str, optional) :
-                The units in which the acquired data will be returned.
-                Defaults to "VOLTS".
-            data_format (str, optional) :
-                The format in which the acquired data will be returned.
-                Defaults to "ASCII".
-            averaging (bool, optional) :
-                Enable/disable averaging. When True, if decimation is higher than 1,
-                each returned sample is the average of the taken samples. For example,
-                if dec = 4, the returned sample will be the average of the 4 decimated
-                samples.
+            units (Units, optional):
+                Units for the acquired data (``Units.VOLTS`` or ``Units.RAW``).
+                Defaults to None (VOLTS).
+            data_format (DataFormat, optional):
+                Format for the acquired data (``DataFormat.ASCII`` or ``DataFormat.BIN``).
+                Defaults to None (ASCII).
+            byte_order (ByteOrder, optional):
+                Byte order for binary data (``ByteOrder.BEND`` or ``ByteOrder.LEND``).
+                Defaults to None (BEND).
+            averaging (bool, optional):
+                When True, each returned sample is the average of the decimated samples.
                 Defaults to True.
-            gain (list(str), optional) :
-                HV / LV - (High (1:20) or Low (1:1 attenuation)) 
-                The first element in list applies to the SOUR1 and the second to SOUR2.
-                Refers to jumper settings on Red Pitaya fast analog inputs.
-                (1:20 and 1:1 attenuator for SIGNALlab 250-12)
-                Defaults to "None".
-            coupling (list(str), optional) :
-                AC / DC - coupling mode for fast analog inputs.
-                The first element in list applies to the SOUR1 and the second to SOUR2.
-                (Only SIGNALlab 250-12)
-                Defaults to "None".
-            siglab (bool, optional) :
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-            input4 (bool, optional) :
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
-
-        The settings will work on any Red Pitaya board. If operating on SIGNALlab 250-12
-        or STEMlab 125-14 4-Input change the bool value of the appropriate parameter to
-        true (siglab, input4). This will change the available range of input parameters.
+            gain (List[Gain], optional):
+                HV/LV gain per channel. Length 2 (or 4 for STEMlab 4-Input).
+                Not applicable to SDRlab 122-16. Defaults to None.
+            coupling (List[Coupling], optional):
+                AC/DC coupling per channel. SIGNALlab 250-12 only. Defaults to None.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_acq_set_params(dec, units, data_format, gain, coupling, siglab, input4)
+        self._validate_acq_set_params(dec, units, data_format, gain, coupling, board)
 
-        #!!!!! n = 4 if input4 else 2
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
 
         self.tx_txt(f"ACQ:DEC:Factor {dec}")
         self.tx_txt(f"ACQ:AVG {'ON' if averaging else 'OFF'}")
@@ -1054,46 +1227,29 @@ class scpi (object):
             self.tx_txt(f"ACQ:DATA:Units {units.value}")
         if data_format is not None:
             self.tx_txt(f"ACQ:DATA:FORMAT {data_format.value}")
+        if byte_order is not None:
+            self.tx_txt(f"ACQ:DATA:BYTE:ORDER {byte_order.value}")
 
-        if gain is not None:
-            for i, g in enumerate(gain, start=1):
+        if gain is not None and board != BoardModel.SDRLAB_122_16:
+            for i, g in enumerate(gain[:n], start=1):
                 self.tx_txt(f"ACQ:SOUR{i}:GAIN {g.value}")
-        if coupling is not None and siglab:
-            for i, c in enumerate(coupling, start=1):
+        if coupling is not None and board == BoardModel.SIGNALLAB_250_12:
+            for i, c in enumerate(coupling[:n], start=1):
                 self.tx_txt(f"ACQ:SOUR{i}:COUP {c.value}")
 
         self.check_error()
 
-    def acq_get_settings(self, siglab: bool = False, input4: bool = False) -> List[str | None]:
+    def acq_get_settings(self, board: BoardModel = BoardModel.STEMLAB_125_14) -> List[str]:
+        """Retrieves standard acquisition settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[dec_factor, average, units, data_format, buf_size,
+            gain_ch1, gain_ch2, (gain_ch3, gain_ch4,) (coup_ch1, coup_ch2)]``.
+
+        Args:
+            board (BoardModel, optional): Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        Retrieves the standard acquisition settings from Red Pitaya, prints them in console and returns
-        them as an array with the following sequence:
-        [dec_factor, avearge, units, data_format, buf_size, gain_ch1, gain_ch2, coup_ch1, coup_ch2]
-                                                                              , gain_ch3, gain_ch4
-            Dec_factor      - Current decimation factor
-            Average         - Current averaging status (ON/OFF)
-            Units           - Acquisition units (V, RAW)
-            Data_format     - Acquisition data format (ASCII, BIN)
-            Buf_size        - Buffer size
-            Gain_ch1-4      - Current gain on channels (CH3 and CH4 STEMlab 125-14 4-Input only)
-            Coup_ch1/2      - Current coupling mode for both channels (AC/DC) (SIGNALlab only)
-
-        Note:   The last two array elements won't exist if siglab = False
-                Gain of channels 3 and 4 only if input4 = True
-
-        Parameters
-        ----------
-            siglab (bool, optional):
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-            input4 (bool, optional):
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
-
-        """
-        self._validate_board(siglab, input4)
-
-        n = 4 if input4 else 2
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
 
         settings = [
             self.txrx_txt("ACQ:DEC:Factor?"),
@@ -1103,28 +1259,14 @@ class scpi (object):
             self.txrx_txt("ACQ:BUF:SIZE?")
         ]
 
-        for i in range(n):
-            settings.append(self.txrx_txt(f"ACQ:SOUR{i+1}:GAIN?"))
+        if board != BoardModel.SDRLAB_122_16:
+            for i in range(n):
+                settings.append(self.txrx_txt(f"ACQ:SOUR{i+1}:GAIN?"))
 
-        if siglab:
+        if board == BoardModel.SIGNALLAB_250_12:
             for i in range(2):
                 settings.append(self.txrx_txt(f"ACQ:SOUR{i+1}:COUP?"))
         self.check_error()
-
-        #? Remove prints? Repace with logging?
-        print(f"Decimation Factor: {settings[0]}")
-        print(f"Averaging: {settings[1]}")
-        print(f"Units: {settings[2]}")
-        print(f"Data format: {settings[3]}")
-        print(f"Buffer size: {settings[4]}")
-
-        if input4:
-            print(f"Gain CH1/CH2/CH3/CH4: {settings[5]}, {settings[6]}, {settings[7]}, {settings[8]}")
-        else:
-            print(f"Gain CH1/CH2: {settings[5]}, {settings[6]}")
-
-        if siglab:
-            print(f"Coupling CH1/CH2: {settings[7]}, {settings[8]}")
 
         return settings
 
@@ -1133,6 +1275,20 @@ class scpi (object):
         Starts the acquisition.
         """
         self.tx_txt("ACQ:START")
+        self.check_error()
+
+    def acq_arm(self, source: AcqTrigSource) -> None:
+        """
+        Arms the acquisition by setting the trigger source.
+        Must be called after acq_start().
+
+        Parameters
+        ----------
+            source (AcqTrigSource) :
+                Trigger source. Use AcqTrigSource.DISABLED for an
+                immediate (untriggered) acquisition.
+        """
+        self.tx_txt(f"ACQ:TRig {source.value}")
         self.check_error()
 
     def acq_stop(self) -> None:
@@ -1151,48 +1307,36 @@ class scpi (object):
         trig_hyst: Optional[float] = None,
         ext_trig_deb_us: Optional[int] = None,
         ext_trig_lvl: Optional[float] = None,
-        siglab: bool = False,
-        input4: bool = False
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
         """
         Set the trigger parameters for the standard signal acquisition.
         One trigger is used for all acquisition channels.
 
-        Parameters
-        -----------
-
-            trig_lvl (float, optional) :
-                Trigger level in Volts. {-1, 1} Volts on LV gain or {-20, 20} Volts on HV gain.
+        Args:
+            trig_lvl (float, optional):
+                Trigger level in Volts. {-1, 1} V on LV gain or {-20, 20} V on HV gain.
                 Defaults to 0.
-            trig_delay (int, optional) :
-                Trigger delay in samples (if trig_delay_ns = True, then the delay is in ns)
+            trig_delay (int, optional):
+                Trigger delay in samples (or in ns if ``trig_delay_ns`` is True).
                 Defaults to 0.
-            trig_delay_ns (bool, optional) :
-                Change the trigger delay to nanoseconds instead of samples.
+            trig_delay_ns (bool, optional):
+                When True, ``trig_delay`` is interpreted as nanoseconds.
                 Defaults to False.
             trig_hyst (float, optional):
-                Trigger hysteresis threshold value in Volts. 
-                Defaults to None.
+                Trigger hysteresis threshold in Volts. Defaults to None.
             ext_trig_deb_us (int, optional):
-                External trigger debounce filter length in microseconds. Pulses shorter
-                than the setting will not count as a triggering moment.
+                External trigger debounce filter length in microseconds.
                 Defaults to None.
-            ext_trig_lvl (float, optional) :
-                Set trigger external level in V.
-                (Only SIGNALlab 250-12)
+            ext_trig_lvl (float, optional):
+                External trigger level in Volts. SIGNALlab 250-12 only.
                 Defaults to None.
-            siglab (bool, optional) :
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-            input4 (bool, optional) :
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
-
-        The settings will work on any Red Pitaya board. If operating on SIGNALlab 250-12
-        or STEMlab 125-14 4-Input change the bool value of the appropriate parameter to
-        true (siglab, input4). This will change the available range of input parameters.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_acq_trig_params(trig_lvl, trig_delay, trig_hyst, ext_trig_deb_us, ext_trig_lvl, siglab, input4)
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
+        gains = [self.txrx_txt(f"ACQ:SOUR{i+1}:GAIN?").upper() for i in range(n)]
+        self._validate_acq_trig_params(trig_lvl, trig_delay, trig_hyst, ext_trig_deb_us, ext_trig_lvl, board, gains)
 
         if trig_delay_ns:
             self.tx_txt(f"ACQ:TRig:DLY:NS {trig_delay}")
@@ -1207,32 +1351,21 @@ class scpi (object):
 
         self.tx_txt(f"ACQ:TRig:LEV {trig_lvl}")
 
-        if siglab and ext_trig_lvl is not None:
+        if board == BoardModel.SIGNALLAB_250_12 and ext_trig_lvl is not None:
             self.tx_txt(f"TRig:EXT:LEV {ext_trig_lvl}")
 
         self.check_error()
 
-    def acq_get_trig_settings(self, siglab: bool = False) -> List[str | None]:
-        """
-        Retrieves the standard acquisition settings from Red Pitaya, prints them in console and returns
-        them as an array with the following sequence:
-        [trig_dly, trig_dly_ns, trig_lvl, trig_hyst, ext_trig_deb_us, ext_trig_lvl]
+    def acq_get_trig_settings(self, board: BoardModel = BoardModel.STEMLAB_125_14) -> List[str]:
+        """Retrieves standard acquisition trigger settings from Red Pitaya.
 
-            Trig_dly        - Current trigger delay in samples
-            Trig_dly_ns     - Current trigger delay in nanoseconds
-            Trig_lvl        - Current triger level in Volts
-            Trig_hyst       - Current trigger hysteresis threshold in Volts
-            Ext_trig_deb_us - Current external trigger debounce filter value in microseconds.
-            Ext_trig_lvl    - Current external trigger level in Volts (SIGNALlab only)
+        Returns:
+            List[str]: ``[trig_dly, trig_dly_ns, trig_lvl, trig_hyst,
+            ext_trig_deb_us, (ext_trig_lvl)]``.
+            ``ext_trig_lvl`` is only present for SIGNALlab 250-12 (index 5).
 
-        Note:   External trigger level setting does not exist if siglab = False
-
-        Parameters
-        ----------
-            siglab (bool, optional):
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-
+        Args:
+            board (BoardModel, optional): Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
         settings = [
             self.txrx_txt("ACQ:TRig:DLY?"),
@@ -1242,66 +1375,11 @@ class scpi (object):
             self.txrx_txt("ACQ:TRig:EXT:DEBouncer:US?")
         ]
 
-        if siglab:
+        if board == BoardModel.SIGNALLAB_250_12:
             settings.append(self.txrx_txt("TRig:EXT:LEV?"))
 
         self.check_error()
-
-        #? Remove prints? Repace with logging?
-        print(f"Trigger delay (samples): {settings[0]}")
-        print(f"Trigger delay (ns): {settings[1]}")
-        print(f"Trigger level (V): {settings[2]}")
-        print(f"Trigger hysteresis (V): {settings[3]}")
-        print(f"External trigger debouncer (us): {settings[4]}")
-
-        if siglab:
-            print(f"External trigger level (V): {settings[5]}")
-
         return settings
-
-    def acq_trig_ext_hyst_set(
-        self,
-        trig_hyst: Optional[float] = None,
-        ext_trig_deb_us: Optional[int] = None,
-        ext_trig_lvl: Optional[float] = None,
-        siglab: bool = False
-    ) -> None:
-        """
-        Set the acquisition trigger parameters common for all channels.
-        
-        Parameters
-        -----------
-
-            trig_hyst (float, optional):
-                Trigger hysteresis threshold value in Volts. 
-                Defaults to None.
-            ext_trig_deb_us (int, optional):
-                External trigger debounce filter length in microseconds. Pulses shorter
-                than the setting will not count as a triggering moment.
-                Defaults to None.
-            ext_trig_lvl (float, optional) :
-                Set trigger external level in V.
-                (Only SIGNALlab 250-12)
-                Defaults to None.
-            siglab (bool, optional) :
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-
-        The settings will work on any Red Pitaya board. If operating on SIGNALlab 250-12
-        change the bool value of the appropriate parameter to true (siglab).
-        This will change the available range of input parameters.
-        """
-        self._validate_acq_trig_ext_hyst_params(trig_hyst, ext_trig_deb_us, ext_trig_lvl, siglab)
-
-        if trig_hyst is not None:
-            self.tx_txt(f"ACQ:TRig:HYST {trig_hyst}")
-
-        if ext_trig_deb_us is not None:
-            self.tx_txt(f"ACQ:TRig:EXT:DEBouncer:US {ext_trig_deb_us}")
-
-        if siglab and ext_trig_lvl is not None:
-            self.tx_txt(f"TRig:EXT:LEV {ext_trig_lvl}")
-        self.check_error()
 
     # Misc
     def acq_set_units_format(
@@ -1330,19 +1408,41 @@ class scpi (object):
 
         self.check_error()
 
-    # Split trigger mode
-    def acq_split_enable(self) -> None:
+    def acq_data_byte_order_set(self, byte_order: Union[ByteOrder, str]) -> None:
         """
-        Enables acquisition split trigger mode.
+        Set the byte order for binary data acquisition.
+
+        Args:
+            byte_order: ByteOrder enum (ByteOrder.LEND / ByteOrder.BEND) or
+                        plain string ('LEND' / 'BEND').
         """
-        self.tx_txt("ACQ:SPLIT:TRig ON")
+        if isinstance(byte_order, ByteOrder):
+            value = byte_order.value
+        else:
+            value = byte_order
+        if value not in ('LEND', 'BEND'):
+            raise ValueError("byte_order must be 'LEND' or 'BEND'")
+        self.tx_txt(f"ACQ:DATA:BYTE:ORDER {value}")
         self.check_error()
 
-    def acq_split_disable(self) -> None:
+    def acq_data_byte_order_get(self) -> str:
         """
-        Disables acquisition split trigger mode.
+        Get the current byte order for binary data acquisition.
+        
+        Returns:
+            'LEND' for little-endian or 'BEND' for big-endian
         """
-        self.tx_txt("ACQ:SPLIT:TRig OFF")
+        return self.txrx_txt("ACQ:DATA:BYTE:ORDER?")
+
+    # Split trigger mode
+    def acq_split_mode(self, enable: bool) -> None:
+        """
+        Enables or disables acquisition split trigger mode.
+
+        Args:
+            enable (bool): True to enable split trigger mode, False to disable.
+        """
+        self.tx_txt(f"ACQ:SPLIT:TRig {'ON' if enable else 'OFF'}")
         self.check_error()
 
     #TODO add get settings
@@ -1353,55 +1453,36 @@ class scpi (object):
         averaging: bool = True,
         gain: Optional[Gain] = None,
         coupling: Optional[Coupling] = None,
-        siglab: bool = False,
-        input4: bool = False
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
 
         """
         Set the parameters for a specific acquisition channel using the split trigger
         signal acquisition mode. Each channel has its own trigger.
 
-        Parameters
-        -----------
-            chan (int) :
-                Input acquisition channel (1 or 2).
-                (1,2,3, or 4 for STEMlab 125-14 4-Input).
-            dec (int, optional) : 
-                Decimation (1, 2, 4, 8, 16, 17, 18, ..., 65535, 65536)
-                Defaults to 1.
-            averaging (bool, optional) :
-                Enable/disable averaging. When True, if decimation is higher than 1,
-                each returned sample is the average of the taken samples. For example,
-                if dec = 4, the returned sample will be the average of the 4 decimated
-                samples.
+        Args:
+            chan (int):
+                Input acquisition channel (1 or 2; 1–4 for STEMlab 125-14 4-Input).
+            dec (int, optional):
+                Decimation factor (1, 2, 4, 8, 16, 17, ..., 65536). Defaults to 1.
+            averaging (bool, optional):
+                When True, each returned sample is the average of the decimated samples.
                 Defaults to True.
-            gain (str, optional) :
-                HV / LV - (High (1:20) or Low (1:1 attenuation)) 
-                Refers to jumper settings on Red Pitaya fast analog inputs.
-                (1:20 and 1:1 attenuator for SIGNALlab 250-12)
-                Defaults to "None".
-            coupling (str, optional) :
-                AC / DC - coupling mode for fast analog inputs.
-                (Only SIGNALlab 250-12)
-                Defaults to "None".
-            siglab (bool, optional) :
-                Set to True if operating with SIGNALlab 250-12.
-                Defaults to False.
-            input4 (bool, optional) :
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
-
-        The settings will work on any Red Pitaya board. If operating on SIGNALlab 250-12
-        or STEMlab 125-14 4-Input change the bool value of the appropriate parameter to
-        true (siglab, input4). This will change the available range of input parameters.
+            gain (Gain, optional):
+                HV/LV gain for this channel. Not applicable to SDRlab 122-16.
+                Defaults to None.
+            coupling (Coupling, optional):
+                AC/DC coupling mode. SIGNALlab 250-12 only. Defaults to None.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_acq_split_params(chan, dec, gain, coupling, siglab, input4)
+        self._validate_acq_split_params(chan, dec, gain, coupling, board)
 
         self.tx_txt(f"ACQ:DEC:Factor:CH{chan} {dec}")
         self.tx_txt(f"ACQ:AVG:CH{chan} {'ON' if averaging else 'OFF'}")
         if gain is not None:
             self.tx_txt(f"ACQ:SOUR{chan}:GAIN {gain.value}")
-        if siglab and coupling is not None:
+        if board == BoardModel.SIGNALLAB_250_12 and coupling is not None:
             self.tx_txt(f"ACQ:SOUR{chan}:COUP {coupling.value}")
 
         self.check_error()
@@ -1412,35 +1493,29 @@ class scpi (object):
         trig_lvl: float = 0,
         trig_delay: int = 0,
         trig_delay_ns: bool = False,
-        input4: bool = False
+        board: BoardModel = BoardModel.STEMLAB_125_14
     ) -> None:
         """
         Set the trigger parameters for the split trigger acquisition.
         Each channel uses a separate trigger.
 
-        Parameters
-        -----------
-            chan (int) :
-                Input acquisition channel (1 or 2).
-                (1,2,3, or 4 for STEMlab 125-14 4-Input).
-            trig_lvl (float, optional) :
-                Trigger level in Volts. {-1, 1} Volts on LV gain or {-20, 20} Volts on HV gain.
+        Args:
+            chan (int):
+                Input acquisition channel (1 or 2; 1–4 for STEMlab 125-14 4-Input).
+            trig_lvl (float, optional):
+                Trigger level in Volts. {-1, 1} V on LV gain or {-20, 20} V on HV gain.
                 Defaults to 0.
-            trig_delay (int, optional) :
-                Trigger delay in samples (if trig_delay_ns = True, then the delay is in ns)
+            trig_delay (int, optional):
+                Trigger delay in samples (or ns if ``trig_delay_ns`` is True).
                 Defaults to 0.
-            trig_delay_ns (bool, optional) :
-                Change the trigger delay to nanoseconds instead of samples.
+            trig_delay_ns (bool, optional):
+                When True, ``trig_delay`` is interpreted as nanoseconds.
                 Defaults to False.
-            input4 (bool, optional) :
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
-
-        The settings will work on any Red Pitaya board. If operating on STEMlab 125-14 4-Input
-        change the bool value of the appropriate parameter to true (input4).
-        This will change the available range of input parameters.
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
         """
-        self._validate_acq_split_trig_params(chan, trig_lvl, trig_delay, trig_delay_ns, input4)
+        gain = self.txrx_txt(f"ACQ:SOUR{chan}:GAIN?").upper()
+        self._validate_acq_split_trig_params(chan, trig_lvl, trig_delay, board, gain)
 
         if trig_delay_ns:
             self.tx_txt(f"ACQ:TRig:DLY:NS:CH{chan} {trig_delay}")
@@ -1458,9 +1533,12 @@ class scpi (object):
         end: Optional[int] = None,
         num_samples: Optional[int] = None,
         old: bool = False,
-        last: bool = False,
+        latest: bool = False,
         trig_pos: Optional[DataTriggerPosition] = None,
-        input4: bool = False
+        data_format: Optional[DataFormat] = None,
+        data_units: Optional[Units] = None,
+        byte_order: Optional[ByteOrder] = None,
+        board: BoardModel = BoardModel.STEMLAB_125_14,
     ) -> np.ndarray:
         """
         Returns the acquired data on a channel from the Red Pitaya, with the following options (for a specific channel):
@@ -1471,43 +1549,42 @@ class scpi (object):
             - lat and n          => returns 'n' latest samples in the buffer
             - trig_pos and n     => returns 'n' samples around trigger position (depends on setting)
 
-        Parameters
-        ----------
-            chan (int) :
-                Input acquisition channel (1 or 2).
-                (1,2,3, or 4 for STEMlab 125-14 4-Input).
-            start (int, optional):
-                Start position of acquired data in the buffer {0,1,...16384}
-                Defaults to None.
-            end (int, optional):
-                End position of acquired data in the buffer {0,1,...16384}
-                Defaults to None.
-            num_samples (int, optional):
-                Number of samples read (== `n`).
-                Defaults to None.
-            old (bool, optional):
-                Read oldest samples in the buffer.
-                Defaults to False.
-            last (bool, optional):
-                Read latest samples in the buffer.
-                Defaults to False.
-            trig_pos (str, optional):
-                Read samples around trigger position:
-                    - `PRE_TRIG` - before triggering moment (includes trigger sample)
-                    - `POST_TRIG` - after triggering moment (includes trigger sample)
-                    - `PRE_POST_TRIG` - before and after triggering moment (includes trigger sample)
-                                        2*`n`+ 1 samples.
-                Defaults to None.
-            input4 (bool, optional) :
-                Set to True if operating with STEMlab 125-14 4-Input.
-                Defaults to False.
+        When *data_format*, *data_units*, and *byte_order* are supplied (matching
+        what was passed to :meth:`acq_set`), no extra SCPI queries are issued per
+        call. If any parameter is ``None`` its value is queried from the board.
 
-        Returns
-        -------
-            np.ndarray:
-                Numpy array with captured data.
+        Args:
+            chan (int):
+                Input acquisition channel (1 or 2; 1–4 for STEMlab 125-14 4-Input).
+            start (int, optional):
+                Start position in the buffer {0, ..., 16384}. Defaults to None.
+            end (int, optional):
+                End position in the buffer {0, ..., 16384}. Defaults to None.
+            num_samples (int, optional):
+                Number of samples to read. Defaults to None.
+            old (bool, optional):
+                Read oldest samples in the buffer. Defaults to False.
+            latest (bool, optional):
+                Read latest samples in the buffer. Defaults to False.
+            trig_pos (DataTriggerPosition, optional):
+                Read samples around trigger position (PRE_TRIG, POST_TRIG, PRE_POST_TRIG).
+                Defaults to None.
+            data_format (DataFormat, optional):
+                Expected data format. Defaults to None (queried from board).
+            data_units (Units, optional):
+                Expected data units. Defaults to None (queried from board).
+            byte_order (ByteOrder, optional):
+                Byte order for binary data. Defaults to None (queried from board).
+            board (BoardModel, optional):
+                Board model. Defaults to ``BoardModel.STEMLAB_125_14``.
+
+        Returns:
+            np.ndarray: Numpy array with captured data.
         """
-        self._validate_acq_data_params(chan, start, end, num_samples, old, last, trig_pos, input4)
+        self._validate_acq_data_params(chan, start, end, num_samples, old, latest, trig_pos, board)
+
+        units_str  = data_units.value   if data_units   is not None else self.txrx_txt('ACQ:DATA:Units?')
+        format_str = data_format.value  if data_format  is not None else self.txrx_txt("ACQ:DATA:FORMAT?")
 
         # Determine the output data
         if start is not None and end is not None:
@@ -1516,31 +1593,43 @@ class scpi (object):
             self.tx_txt(f"ACQ:SOUR{chan}:DATA:STArt:N? {start},{num_samples}")
         elif old and num_samples is not None:
             self.tx_txt(f"ACQ:SOUR{chan}:DATA:Old:N? {num_samples}")
-        elif last and num_samples is not None:
+        elif latest and num_samples is not None:
             self.tx_txt(f"ACQ:SOUR{chan}:DATA:LATest:N? {num_samples}")
         elif trig_pos is not None and num_samples is not None:
             self.tx_txt(f"ACQ:SOUR{chan}:DATA:TRig? {num_samples},{trig_pos.value}")
         else:
             self.tx_txt(f"ACQ:SOUR{chan}:DATA?")
 
-        # Get data type from Red Pitaya
-        units = self.txrx_txt('ACQ:DATA:Units?')
-        data_format = self.txrx_txt("ACQ:DATA:FORMAT?")
-        self.check_error()
-
-        #! Check if data_format is correct
         # Convert data
-        if data_format == "BIN":
+        if format_str == "BIN":
             buff_byte = self.rx_arb()
-            if units == "VOLTS":
-                buff = np.frombuffer(buff_byte, dtype='>f4')
-                #buff = [struct.unpack('!f',bytearray(buff_byte[i:i+4]))[0] for i in range(0, len(buff_byte), 4)]
-            elif units == "RAW":
-                buff = np.frombuffer(buff_byte, dtype='>i2')
-                #buff = [struct.unpack('!h',bytearray(buff_byte[i:i+2]))[0] for i in range(0, len(buff_byte), 2)]
+            if not isinstance(buff_byte, bytes):
+                raise ValueError("Failed to receive binary data")
+
+            if byte_order is not None:
+                order_str = byte_order.value
+            else:
+                try:
+                    order_str = self.txrx_txt('ACQ:DATA:BYTE:ORDER?').strip()
+                except Exception:
+                    order_str = ByteOrder.LEND.value    # little-endian fallback
+
+            if order_str == ByteOrder.LEND.value:
+                float_dtype, int_dtype = '<f4', '<i2'
+            else:
+                float_dtype, int_dtype = '>f4', '>i2'
+
+            if units_str == Units.VOLTS.value:
+                buff = np.frombuffer(buff_byte, dtype=float_dtype)
+            elif units_str == Units.RAW.value:
+                buff = np.frombuffer(buff_byte, dtype=int_dtype)
+            else:
+                raise ValueError(f"Unsupported units: {units_str}")
+
+            buff = buff.astype(np.float64)
         else:
             buff_string = self.rx_txt().strip('{}\n\r').replace("  ", "").split(',')
-            buff = np.array(buff_string).astype(np.float64)
+            buff = np.array(buff_string, dtype=np.float64)
         self.check_error()
 
         return buff
@@ -1553,30 +1642,19 @@ class scpi (object):
         data_format: Optional[DataFormat],
         gain: Optional[List[Gain]],
         coupling: Optional[List[Coupling]],
-        siglab: bool,
-        input4: bool
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for acq_set function.
         """
-        dec_fact_list = [3, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]
-        gain_list = [e.value for e in Gain]
-        coupling_list = [e.value for e in Coupling]
-        units_list = [e.value for e in Units]
-        format_list = [e.value for e in DataFormat]
+        dec_fact_list = [1, 2, 4, 8]
 
-        assert (dec not in dec_fact_list) and (16 <= dec <= 65536), "Decimation factor out of range [1,2,4,8,16,17,18,...,65536]"
-        if units is not None:
-            assert units.value in units_list, f"{units.value} is not a defined unit"
-        if data_format is not None:
-            assert data_format.value in format_list, f"{data_format.value} is not a defined format"
-        if gain is not None:
-            for g in gain:
-                assert g.value in gain_list, f"{g.value} is not a defined gain"
-        if siglab and coupling is not None:
-            for c in coupling:
-                assert c.value in coupling_list, f"{c.value} is not a defined coupling"
-        self._validate_board(siglab, input4)
+        if not ((dec in dec_fact_list) or (16 <= dec <= 65536)):
+            raise ValueError("Decimation factor out of range [1,2,4,8,16,17,18,...,65536].")
+        if gain is not None and board == BoardModel.SDRLAB_122_16:
+            raise ValueError("Gain setting is not available for SDRlab 122-16 (no gain jumpers)")
+        if coupling is not None and board != BoardModel.SIGNALLAB_250_12:
+            raise ValueError("Coupling setting is only available for SIGNALlab 250-12")
 
     def _validate_units_format(
         self,
@@ -1590,9 +1668,11 @@ class scpi (object):
         format_list = [e.value for e in DataFormat]
 
         if units is not None:
-            assert units.value in units_list, f"{units.value} is not a defined unit"
+            if units.value not in units_list:
+                raise ValueError(f"{units.value} is not a defined unit.")
         if data_format is not None:
-            assert data_format.value in format_list, f"{data_format.value} is not a defined format"
+            if data_format.value not in format_list:
+                raise ValueError(f"{data_format.value} is not a defined format.")
 
     def _validate_acq_trig_params(
         self,
@@ -1601,44 +1681,28 @@ class scpi (object):
         trig_hyst: Optional[float],
         ext_trig_deb_us: Optional[int],
         ext_trig_lvl: Optional[float],
-        siglab: bool,
-        input4: bool
+        board: BoardModel,
+        gains: List[str]
     ) -> None:
         """
         Validate parameters for acq_trig_set function.
         """
-        trig_lvl_lim = 20.0 if any(self.txrx_txt(f"ACQ:SOUR{i+1}:GAIN?").upper() == "HV" for i in range(4 if input4 else 2)) else 1.0
+        trig_lvl_lim = 20.0 if any(g == "HV" for g in gains) else 1.0
         ext_trig_lvl_limit = 5.0
 
-        assert abs(trig_lvl) <= trig_lvl_lim, f"Trigger level out of range {-trig_lvl_lim, trig_lvl_lim} V"
-        assert trig_delay >= 0, "Trigger delay cannot be less than 0"
+        if abs(trig_lvl) > trig_lvl_lim:
+            raise ValueError(f"Trigger level out of range [{-trig_lvl_lim}, {trig_lvl_lim}] V.")
+        if trig_delay < 0:
+            raise ValueError("Trigger delay cannot be less than 0.")
         if trig_hyst is not None:
-            assert trig_hyst >= 0, "Trigger hysteresis cannot be negative"
-        if siglab and ext_trig_lvl is not None:
-            assert abs(ext_trig_lvl) <= ext_trig_lvl_limit, f"External trigger level out of range {-ext_trig_lvl_limit, ext_trig_lvl_limit} V"
+            if trig_hyst < 0:
+                raise ValueError("Trigger hysteresis cannot be negative.")
+        if board == BoardModel.SIGNALLAB_250_12 and ext_trig_lvl is not None:
+            if abs(ext_trig_lvl) > ext_trig_lvl_limit:
+                raise ValueError(f"External trigger level out of range [{-ext_trig_lvl_limit}, {ext_trig_lvl_limit}] V.")
         if ext_trig_deb_us is not None:
-            assert ext_trig_deb_us >= 1, "External trigger debounce filter value is out of range. The minimal value is 1 microsecond"
-        assert not (siglab and input4), "Please select only one board option. 'siglab' and 'input4' cannot be true at the same time."
-        self._validate_board(siglab, input4)
-
-    def _validate_acq_trig_ext_hyst_params(
-        self,
-        trig_hyst: Optional[float],
-        ext_trig_deb_us: Optional[int],
-        ext_trig_lvl: Optional[float],
-        siglab: bool
-    ) -> None:
-        """
-        Validate parameters for acq_trig_ext_hyst_set function.
-        """
-        ext_trig_lvl_limit = 5.0
-
-        if trig_hyst is not None:
-            assert trig_hyst >= 0, "Trigger hysteresis cannot be negative"
-        if siglab and ext_trig_lvl is not None:
-            assert abs(ext_trig_lvl) <= ext_trig_lvl_limit, f"External trigger level out of range {-ext_trig_lvl_limit, ext_trig_lvl_limit} V"
-        if ext_trig_deb_us is not None:
-            assert ext_trig_deb_us >= 1, "External trigger debounce filter value is out of range. The minimal value is 1 microsecond"
+            if ext_trig_deb_us < 1:
+                raise ValueError("External trigger debounce filter value is out of range. The minimal value is 1 microsecond.")
 
     def _validate_acq_split_params(
         self,
@@ -1646,49 +1710,44 @@ class scpi (object):
         dec: int,
         gain: Optional[Gain],
         coupling: Optional[Coupling],
-        siglab: bool,
-        input4: bool
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for acq_split_set function.
         """
-        dec_fact_list = [3, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15]
-        gain_list = [e.value for e in Gain]
-        coupling_list = [e.value for e in Coupling]
+        dec_fact_list = [1, 2, 4, 8]
 
-        n = 4 if input4 else 2
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
 
-        assert chan <= n, f"Channel {chan} out of range for the current Red Pitaya board"
-        assert (dec not in dec_fact_list) and (16 <= dec <= 65536), "Decimation factor out of range [1,2,4,8,16,17,18,...,65536]"
-        if gain is not None:
-            assert gain.value in gain_list, f"{gain.value} is not a defined gain"
-        if siglab and coupling is not None:
-            assert coupling.value in coupling_list, f"{coupling.value} is not a defined coupling"
-        assert not (siglab and input4), "Please select only one board option. 'siglab' and 'input4' cannot be true at the same time."
+        if not (1 <= chan <= n):
+            raise ValueError(f"Channel {chan} out of range [1, {n}].")
+        if not ((dec in dec_fact_list) or (16 <= dec <= 65536)):
+            raise ValueError("Decimation factor out of range [1,2,4,8,16,17,18,...,65536].")
+        if gain is not None and board == BoardModel.SDRLAB_122_16:
+            raise ValueError("Gain setting is not available for SDRlab 122-16 (no gain jumpers)")
+        if coupling is not None and board != BoardModel.SIGNALLAB_250_12:
+            raise ValueError("Coupling setting is only available for SIGNALlab 250-12")
 
     def _validate_acq_split_trig_params(
         self,
         chan: int,
         trig_lvl: float,
         trig_delay: int,
-        input4: bool
+        board: BoardModel,
+        gain: str
     ) -> None:
         """
         Validate parameters for acq_split_trig_set function.
         """
-        n = 4 if input4 else 2
-        gain_lvl = "LV"
-        trig_lvl_lim = 1.0
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
+        trig_lvl_lim = 20.0 if gain == "HV" else 1.0
 
-        assert chan <= n, f"Channel {chan} out of range for the current Red Pitaya board"
-
-        gain = self.txrx_txt(f"ACQ:SOUR{chan}:GAIN?")
-        if gain.upper() == "HV":
-            trig_lvl_lim = 20.0
-            gain_lvl = "HV"
-
-        assert abs(trig_lvl) <= trig_lvl_lim, f"Trigger level out of range {-trig_lvl_lim, trig_lvl_lim} V for gain {gain_lvl}"
-        assert trig_delay >= 0, "Trigger delay cannot be less than 0"
+        if not (1 <= chan <= n):
+            raise ValueError(f"Channel {chan} out of range [1, {n}].")
+        if abs(trig_lvl) > trig_lvl_lim:
+            raise ValueError(f"Trigger level out of range [{-trig_lvl_lim}, {trig_lvl_lim}] V for gain {gain}.")
+        if trig_delay < 0:
+            raise ValueError("Trigger delay cannot be less than 0.")
 
     def _validate_acq_data_params(
         self,
@@ -1697,37 +1756,37 @@ class scpi (object):
         end: Optional[int],
         num_samples: Optional[int],
         old: bool,
-        last: bool,
+        latest: bool,
         trig_pos: Optional[DataTriggerPosition],
-        input4: bool
+        board: BoardModel
     ) -> None:
         """
         Validate parameters for acq_data function.
         """
-        n = 4 if input4 else 2
+        n = 4 if board == BoardModel.STEMLAB_125_14_4INPUT else 2
         low_lim = 0
         up_lim = 16384
 
-        assert chan <= n, f"Channel {chan} out of range for the current Red Pitaya board"
-        assert not (old and last), "Please select only one. 'old' and 'last' cannot be True at the same time."
+        if not (1 <= chan <= n):
+            raise ValueError(f"Channel {chan} out of range [1, {n}].")
+        if old and latest:
+            raise ValueError("'old' and 'latest' cannot both be True.")
         if start is not None:
-            assert low_lim <= start <= up_lim, f"Start position out of range {low_lim, up_lim}"
+            if not (low_lim <= start <= up_lim):
+                raise ValueError(f"Start position out of range [{low_lim}, {up_lim}].")
         if end is not None:
-            assert low_lim <= end <= up_lim, f"End position out of range {low_lim, up_lim}"
+            if not (low_lim <= end <= up_lim):
+                raise ValueError(f"End position out of range [{low_lim}, {up_lim}].")
         if num_samples is not None:
-            assert low_lim <= num_samples <= up_lim, f"Sample number out of range {low_lim, up_lim}"
+            if not (low_lim <= num_samples <= up_lim):
+                raise ValueError(f"Sample number out of range [{low_lim}, {up_lim}].")
             if trig_pos is not None:
-                assert trig_pos in DataTriggerPosition, f"Trigger position value {trig_pos} is not defined"
+                if trig_pos not in DataTriggerPosition:
+                    raise ValueError(f"Trigger position value {trig_pos} is not defined.")
                 if trig_pos == DataTriggerPosition.PRE_POST_TRIG:
-                    assert num_samples * 2 + 1 <= up_lim, f"Sample number is too big for {trig_pos.value} setting. This mode returns num_samples*2 +1 data samples."
+                    if num_samples * 2 + 1 > up_lim:
+                        raise ValueError(f"Sample number is too big for {trig_pos.value} setting. This mode returns num_samples*2+1 data samples.")
 
-    def _validate_board(self, siglab: bool, input4: bool) -> None:
-        """
-        Validate board model.
-        """
-        assert not(siglab and input4), "Please select only one board option. 'siglab' and 'input4' cannot be true at the same time."
-
-    #! Check with Copilot
     ### UART ###
 
     def uart_set(
@@ -1756,12 +1815,14 @@ class scpi (object):
         self.tx_txt(f"UART:STOPB STOP{stop}")
         self.tx_txt(f"UART:PARITY {parity.value}")
         self.tx_txt(f"UART:TIMEOUT {timeout}")
+        self.tx_txt("UART:SETUP")
+        self.check_error()
 
-    def uart_get_settings(self) -> List[str | None]:
-        """
-        Retrieves the settings from Red Pitaya, prints them in console and returns
-        them as an array with the following sequence:
-        [speed, databits, stopbits, parity, timeout]
+    def uart_get_settings(self) -> List[str]:
+        """Retrieves UART settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[speed, databits, stopbits, parity, timeout]``.
         """
         settings = [
             self.txrx_txt("UART:SPEED?"),
@@ -1770,27 +1831,24 @@ class scpi (object):
             self.txrx_txt("UART:PARITY?"),
             self.txrx_txt("UART:TIMEOUT?")
         ]
-        #? Remove prints? Repace with logging?
-        print(f"Baudrate/Speed: {settings[0]}")
-        print(f"Databits: {settings[1]}")
-        print(f"Stopbits: {settings[2]}")
-        print(f"Parity: {settings[3]}")
-        print(f"Timeout (0.1 sec): {settings[4]}")
-
         return settings
 
+    #TODO add BIN, OCT, DEC, HEX data option
     def uart_write_string(
         self,
         string: str,
-        word_length: bool = False
+        use_ascii: bool = True
     ) -> None:
         """
         Sends a string of characters through UART.
+
+        Args:
+            string (str): The string to send.
+            use_ascii (bool, optional): When True, encode using ASCII; when False, use UTF-8.
+                Defaults to True (ASCII).
         """
-        # Set the code depending on word length
-        code = "ascii" if word_length else "utf-8"
+        code = "ascii" if use_ascii else "utf-8"
         arr = ',#H'.join(format(x, 'X') for x in bytearray(string, code))
-        # Send in hexa format
         self.tx_txt(f"UART:WRITE{len(string)} #H{arr}")
 
     def uart_read_string(
@@ -1800,7 +1858,9 @@ class scpi (object):
         """
         Reads a string of data from UART and decodes it from ASCII to string.
         """
-        assert length > 0, "Length must be greater than 0."
+        if length <= 0:
+            raise ValueError("Length must be greater than 0.")
+        #TODO decode into UTF8 or ASCII
 
         self.tx_txt(f"UART:READ{length}?")
         res = self.rx_txt().strip('{}\n\r').replace("  ", "").split(',')
@@ -1820,90 +1880,74 @@ class scpi (object):
         """
         Validate parameters for uart_set function.
         """
-        speed_list = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 576000, 921000, 1000000, 1152000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000]
+        speed_list = [1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 576000, 921600, 1000000, 1152000, 1500000, 2000000, 2500000, 3000000, 3500000, 4000000]
         bits_list = [e.value for e in UartBits]
         parity_list = [e.value for e in UartParity]
 
-        assert speed in speed_list, f"{speed} is not a defined speed for UART connection. Please check the speed table."
-        assert bits.value in bits_list, f"{bits.value} is not a defined character size."
-        assert parity.value in parity_list, f"{parity.value} is not a defined parity."
-        assert stop in (1, 2), "The number of stop bits can only be 1 or 2"
-        assert 0 <= timeout <= 255, f"Timeout {timeout} is out of range [0, 255]"
+        if speed not in speed_list:
+            raise ValueError(f"{speed} is not a defined speed for UART connection. Please check the speed table.")
+        if bits.value not in bits_list:
+            raise ValueError(f"{bits.value} is not a defined character size.")
+        if parity.value not in parity_list:
+            raise ValueError(f"{parity.value} is not a defined parity.")
+        if stop not in (1, 2):
+            raise ValueError("The number of stop bits can only be 1 or 2.")
+        if not (0 <= timeout <= 255):
+            raise ValueError(f"Timeout {timeout} is out of range [0, 255].")
 
     ### SPI ###
 
+    def spi_init(
+        self
+    ) -> None:
+        """
+        Initializes the SPI interface.
+        """
+        self.tx_txt('SPI:INIT:DEV "/dev/spidev2.0"')    # OS versions IN DEV and higher
+        #self.tx_txt('SPI:INIT:DEV "/dev/spidev1.0"')   # OS versions 2.05-37 and lower
+        self.check_error()
+    
     def spi_set(
         self,
-        spi_mode: str = None,
-        cs_mode: str = None,
-        speed: int = None,
-        word_len: int = None
+        spi_mode: SPIMode = SPIMode.LISL,
+        cs_mode: SPICSMode = SPICSMode.NORMAL,
+        speed: int = 50000000,
+        word_len: int = 8
     ) -> None:
         """
         Configures the provided settings for SPI.
 
         Args:
-            spi_mode (str, optional): Sets the mode for SPI; - LISL (Low Idle level, Sample Leading edge)
-                                                             - LIST (Low Idle level, Sample Trailing edge)
-                                                             - HISL (High Idle level, Sample Leading edge)
-                                                             - HIST (High Idle level, Sample Trailing edge)
+            spi_mode (SPIMode, optional): Sets the mode for SPI; - LISL (Low Idle level, Sample Leading edge)
+                                                            - LIST (Low Idle level, Sample Trailing edge)
+                                                            - HISL (High Idle level, Sample Leading edge)
+                                                            - HIST (High Idle level, Sample Trailing edge)
                                                         Defaults to LISL.
-            cs_mode (str, optional): Sets the mode for CS: - NORMAL (After message transmission, CS => HIGH)
-                                                           - HIGH (After message transmission, CS => LOW)
+            cs_mode (SPICSMode, optional): Sets the mode for CS: - NORMAL (After message transmission, CS => HIGH)
+                                                            - HIGH (After message transmission, CS => LOW)
                                                         Defaults to NORMAL.
-            speed (int, optional): Sets the speed of the SPI connection. Defaults to 5e7.
-            word_len (int, optional): Character size in bits (CS6, CS7, CS8). Defaults to "CS8".
+            speed (int, optional): Sets the speed of the SPI connection. Defaults to 50000000.
+            word_len (int, optional): Character size in bits (6, 7, 8). Defaults to 8.
         """
-
-        # Constants
-        speed_max_limit = 100e6
-        speed_min_limit = 1
-        cs_mode_list = ["NORMAL","HIGH"]
-        #order_list = ["MSB","LSB"]
-        spi_mode_list = ["LISL","LIST","HISL","HIST"]
-        bits_min_limit = 7
-
-
-        # Input Limits Check
-
-        try:
-            assert spi_mode.upper() in spi_mode_list
-        except AssertionError as spi_mode_err:
-            raise ValueError(f"{spi_mode} is not a defined SPI mode.") from spi_mode_err
-
-        try:
-            assert cs_mode.upper() in cs_mode_list
-        except AssertionError as cs_err:
-            raise ValueError(f"{cs_mode} is not a defined CS mode.") from cs_err
-
-        try:
-            assert speed_min_limit <= speed <= speed_max_limit
-        except AssertionError as speed_err:
-            raise ValueError(f"{speed} is out of range [{speed_min_limit},{speed_max_limit}].") from speed_err
-
-        try:
-            assert word_len >= bits_min_limit
-        except AssertionError as bits_err:
-            raise ValueError(f"Word length must be greater than {bits_min_limit}. Current word length: {word_len}") from bits_err
-
+        self._validate_spi_params(spi_mode, cs_mode, speed, word_len)
 
         # Configuring SPI
 
-        self.tx_txt(f"SPI:SETtings:MODE {spi_mode.upper()}")
-        self.tx_txt(f"SPI:SETtings:CSMODE {cs_mode.upper()}")
+        self.tx_txt(f"SPI:SETtings:MODE {spi_mode.value}")
+        self.tx_txt(f"SPI:SETtings:CSMODE {cs_mode.value}")
         self.tx_txt(f"SPI:SETtings:SPEED {speed}")
         self.tx_txt(f"SPI:SETtings:WORD {word_len}")
 
         self.tx_txt("SPI:SETtings:SET")
-        print("SPI is configured")
+        self.check_error()
 
     def spi_get_settings(
         self
-    ) -> List[str | None]:
-        """
-        Retrieves the SPI settings from Red Pitaya, prints them in console and returns
-        them as an array with the following sequence:
-        [mode, csmode, speed, word_len, msg_size]
+    ) -> List[str]:
+        """Retrieves SPI settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[mode, csmode, speed, word_len, msg_size]``.
         """
         self.tx_txt("SPI:SETtings:GET")
         settings = [
@@ -1913,20 +1957,244 @@ class scpi (object):
             self.txrx_txt("SPI:SETtings:WORD?"),
             self.txrx_txt("SPI:MSG:SIZE?")
         ]
-
-        print(f"SPI mode: {settings[0]}")
-        print(f"CS mode: {settings[1]}")
-        print(f"Speed: {settings[2]}")
-        print(f"Word length: {settings[3]}")
-        print(f"Message queue length: {settings[4]}")
-
         return settings
 
-    #TODO add spi_write()
-    #TODO add spi_read()
+    def spi_create_msg(
+        self,
+        msg_num: int = 1
+    ) -> int:
+        """
+        Creates new messages in the message queue.
+        Returns the legth of the message queue.
+        """
+        self.tx_txt(f"SPI:MSG:CREATE {msg_num}")
+        queue_len = self.txrx_txt("SPI:MSG:SIZE?")
+        if queue_len is None:
+            raise RuntimeError("SPI message queue creation failed: no response from board.")
+        self.check_error()
+        return int(queue_len)
+
+    #TODO add BIN, OCT, DEC, HEX data option
+    #TODO not really write, read, writeread as this just configures the messages
+    def spi_conf_tx(
+        self,
+        data: str,
+        msg_num: int = 0,
+        cs_change: bool = False
+    )-> None:
+        """Configure the specified SPI message. Only set the transmit buffer!
+
+        Parameters
+        ----------
+        data : str
+            String of data to be sent.
+        msg_num : int, optional
+            Message number to save the data to, by default 0
+        cs_change : bool, optional
+            Change the state of the CS line after the message is sent, by default False
+        """
+        if len(data) == 0:
+            raise ValueError("Data must not be empty.")
+        if msg_num < 0:
+            raise ValueError("Message number must not be negative.")
+        if cs_change:
+            self.tx_txt(f"SPI:MSG{msg_num}:TX{len(data)}:CS {','.join(str(ord(char)) for char in data)}")
+        else:
+            self.tx_txt(f"SPI:MSG{msg_num}:TX{len(data)} {','.join(str(ord(char)) for char in data)}")
+        self.check_error()
+    
+    def spi_conf_rx(
+        self,
+        data_len: int,
+        msg_num: int = 0,
+        cs_change: bool = False
+    ) -> None:
+        """Initialize the SPI receive buffer for specific message. Only set the receive buffer!
+
+        Parameters
+        ----------
+        data_len : int
+            Length of data to be read.
+        msg_num : int, optional
+            Message number to read data from, by default 0
+        cs_change : bool, optional
+            Change the state of the CS line after the message is sent, by default False
+        """
+        
+        if data_len <= 0:
+            raise ValueError("Data length must be greater than 0.")
+        if msg_num < 0:
+            raise ValueError("Message number must not be negative.")
+        if cs_change:
+            self.tx_txt(f"SPI:MSG{msg_num}:RX{data_len}:CS")
+        else:
+            self.tx_txt(f"SPI:MSG{msg_num}:RX{data_len}")
+        self.check_error()
+    
+    def spi_conf_txrx(
+        self,
+        data: str,
+        msg_num: int = 0,
+        cs_change: bool = False
+    ) -> None:
+        """Configure the specified SPI message and initialize the corresponding receive buffer.
+
+        Parameters
+        ----------
+        data : str
+            String of data to be sent.
+        msg_num : int, optional
+            Message number to save the data to, by default 0
+        cs_change : bool, optional
+            Change the state of the CS line after the message is sent, by default False
+        """
+        if len(data) == 0:
+            raise ValueError("Data must not be empty.")
+        if msg_num < 0:
+            raise ValueError("Message number must not be negative.")
+        if cs_change:
+            self.tx_txt(f"SPI:MSG{msg_num}:TX{len(data)}:RX:CS {','.join(str(ord(char)) for char in data)}")
+        else:
+            self.tx_txt(f"SPI:MSG{msg_num}:TX{len(data)}:RX {','.join(str(ord(char)) for char in data)}")
+        self.check_error()
+    
+    def spi_get_tx_buff(
+        self,
+        msg_num: int = 0
+    ) -> str:
+        """Get the data from the transmit buffer.
+
+        Parameters
+        ----------
+        msg_num : int, optional
+            Message number to get the data from, by default 0
+        """
+        if msg_num < 0:
+            raise ValueError("Message number must not be negative.")
+        tx_buff = self.txrx_txt(f"SPI:MSG{msg_num}:TX?")
+        if tx_buff is None:
+            raise RuntimeError(f"SPI TX buffer read failed for message {msg_num}: no response from board.")
+        tx_buff = tx_buff.strip('{}\n\r').replace("  ", "")
+        self.check_error()
+        return ''.join(chr(int(x)) for x in tx_buff.split(','))
+    
+    def spi_get_rx_buff(
+        self,
+        msg_num: int = 0
+    ) -> str:
+        """Get the data from the receive buffer.
+
+        Parameters
+        ----------
+        msg_num : int, optional
+            Message number to get the data from, by default 0
+        """
+        if msg_num < 0:
+            raise ValueError("Message number must not be negative.")
+        rx_buff = self.txrx_txt(f"SPI:MSG{msg_num}:RX?")
+        if rx_buff is None:
+            raise RuntimeError(f"SPI RX buffer read failed for message {msg_num}: no response from board.")
+        rx_buff = rx_buff.strip('{}\n\r').replace("  ", "")
+        self.check_error()
+        return ''.join(chr(int(x)) for x in rx_buff.split(','))
+    
+    def spi_write_read(
+        self,
+        data: str,
+        msg_num: int = 0
+    ) -> str:
+        """Write the data to the SPI transmit buffer, start the transmission and read the data from the receive buffer.
+        This function is used for a single message only.
+        
+        Parameters
+        ----------
+        data : str
+            String of data to be sent.
+        msg_num : int, optional
+            Message number to save the data to, by default 0
+        
+        Returns
+        -------
+        str
+            Received data in string format.
+        """
+        if len(data) == 0:
+            raise ValueError("Data must not be empty.")
+        queue_len = self.txrx_txt("SPI:MSG:SIZE?")
+        if queue_len is None:
+            raise RuntimeError("SPI message queue error: no response from board.")
+        if not (0 <= msg_num < int(queue_len)):
+            raise ValueError(f"Message number {msg_num} out of range [0, {int(queue_len)}).")
+        self.spi_conf_txrx(data, msg_num, False)
+        self.tx_txt("SPI:PASS")
+        rx_data = self.spi_get_rx_buff(msg_num)
+
+        return rx_data
+
+    # Validate
+    def _validate_spi_params(
+        self,
+        spi_mode: SPIMode,
+        cs_mode: SPICSMode,
+        speed: int,
+        word_len: int
+    ) -> None:
+        """
+        Validate parameters for spi_set function.
+        """
+        # Constants
+        speed_max_limit = int(100e6)
+        speed_min_limit = 1
+        word_len_list = [7, 8]
+
+        # Input Limits Check
+        if spi_mode not in SPIMode:
+            raise ValueError(f"{spi_mode} is not a defined SPI mode.")
+        if cs_mode not in SPICSMode:
+            raise ValueError(f"{cs_mode} is not a defined CS mode.")
+        if not (speed_min_limit <= speed <= speed_max_limit):
+            raise ValueError(f"{speed} is out of range [{speed_min_limit}, {speed_max_limit}].")
+        if word_len not in word_len_list:
+            raise ValueError(f"Word length must be one of {word_len_list}. Current word length: {word_len}.")
 
     ### I2C ###
 
+    def i2c_init(
+        self,
+        address: int = 0x80,
+        dev_name: str = "/dev/i2c-0",
+        fmode: bool = True
+    ) -> None:
+        """
+        Configures the provided settings for I2C.
+
+        Args:
+            address (int, optional): I2C address of the device. Defaults to 0x80.
+            dev_name (str, optional): I2C device name. Defaults to "/dev/i2c-0".
+            fmode (bool, optional): Enable fast mode (400 kHz). Defaults to True.
+        """
+        self.tx_txt(f"I2C:DEV{address} \"{dev_name}\"")
+        self.tx_txt(f"I2C:FMODE {'ON' if fmode else 'OFF'}")
+        self.check_error()
+    
+    def i2c_get_settings(
+        self
+    ) -> List[str]:
+        """Retrieves I2C settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[device, fmode]``.
+        """
+        settings = [
+            self.txrx_txt("I2C:DEV?"),
+            self.txrx_txt("I2C:FMODE?")
+        ]
+        return settings
+    
+    # def i2c_write_ioctl(
+    #     self,
+    #     data: np.ndarray
+    # )
     #TODO add i2c_set()
     #TODO add i2c_get_settings()
     #TODO add i2c_write() - protocol IOctl Smbus
@@ -1936,9 +2204,522 @@ class scpi (object):
 
     #TODO add can_set(), can_get_settings(), can_write(), can_read()
 
-    ### DMA ###
+    def can_data_split(self,
+                       can_str: str
+        ) -> Tuple[np.ndarray,  np.ndarray]:
 
-    #TODO add dma_set(), dma_get_settings()
+        """
+        Reorganizes the CAN string received from Red Pitaya into two NumPy
+        arrays. The first one contains the CAN package information, the second
+        one the CAN data.
+        """
+        can_str_split = can_str.split("{")
+        can_data_start = np.array(can_str_split[0].split(","), dtype=np.int32)
+        can_data = np.array(can_str_split[1].strip("}").split(","))
+
+        return can_data_start, can_data
+
+    ### DMM ###
+    
+    def dmm_calc_buffer_layout(
+        self,
+        acq_channels: Optional[List[int]] = None,
+        acq_samples: Union[int, List[int]] = 0,
+        gen_channels: Optional[List[int]] = None,
+        gen_samples: Union[int, List[int]] = 0,
+        pre_allocated: Optional[List[Tuple[int, int]]] = None,
+    ) -> Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]:
+        """Calculates non-overlapping, page-aligned DMM buffer addresses for both
+        DMA (acquisition) and DMG (generation) channels from the shared DDR3
+        memory region.
+
+        Acquisition buffers are placed first, followed by generation buffers.
+        Either or both sides may be specified; at least one must be provided.
+        The same hardware constraints apply to both:
+
+        - Minimum buffer size is 128 bytes (64 samples); smaller requests are
+          rounded up.
+        - Buffer size in samples is rounded up to the next multiple of 4
+          (4 samples = 8 bytes).
+        - Address spacing between consecutive buffers is rounded up to the next
+          multiple of 4096 bytes (one DDR page).
+
+        Args:
+            acq_channels (List[int], optional): Acquisition channel numbers
+                (e.g. ``[1, 2]``). Defaults to None (no acquisition buffers).
+            acq_samples (int | List[int], optional): Samples per acquisition
+                channel. Pass a single ``int`` for the same size on all
+                channels, or a ``List[int]`` with one value per channel.
+                Ignored when *acq_channels* is None. Defaults to 0.
+            gen_channels (List[int], optional): Generation channel numbers.
+                Defaults to None (no generation buffers allocated).
+            gen_samples (int | List[int], optional): Samples per generation
+                channel. Ignored when *gen_channels* is None. Defaults to 0.
+            pre_allocated (List[Tuple[int, int]], optional): Regions already
+                committed elsewhere as ``[(start_address, size_bytes), ...]``.
+                The allocator begins after the highest end address found here,
+                aligned to the next DDR page boundary. Useful when part of the
+                DMM region is reserved by another subsystem or a previous call.
+                Defaults to None.
+
+        Returns:
+            Tuple[List[Tuple[int, int]], List[Tuple[int, int]]]:
+                ``(acq_layout, gen_layout)`` where each entry is
+                ``[(start_address, buffer_size_bytes), ...]`` in channel order.
+                Either list may be empty if the corresponding channels argument
+                was not provided.
+
+        Raises:
+            ValueError: If neither *acq_channels* nor *gen_channels* is
+                provided, if the requested buffers exceed the available DMM
+                memory, if a channel/samples list length mismatch is detected,
+                or if *pre_allocated* regions fill the entire region.
+
+        Warns:
+            UserWarning: If the total allocation exceeds 90% of the available
+                DMM memory (after subtracting any *pre_allocated* space).
+        """
+        if not acq_channels and not gen_channels:
+            raise ValueError(
+                "At least one of acq_channels or gen_channels must be provided."
+            )
+
+        WARN_THRESHOLD  = 0.90
+        MIN_BUFFER_BYTES = 128   # hardware minimum: 128 bytes = 64 samples
+        MIN_BLOCK_BYTES  = 4096  # one DDR page
+        SAMPLE_ALIGNMENT = 4     # buffer size must be a multiple of 4 samples
+
+        region_start, region_size = self.dma_get_region()
+
+        # Determine the first usable address, skipping any pre-allocated regions
+        if pre_allocated:
+            highest_end = max(start + size for start, size in pre_allocated)
+            # Align upward to the next DDR page boundary
+            highest_end = math.ceil(highest_end / MIN_BLOCK_BYTES) * MIN_BLOCK_BYTES
+            start_addr = max(region_start, highest_end)
+        else:
+            start_addr = region_start
+
+        available = region_size - (start_addr - region_start)
+        if available <= 0:
+            raise ValueError(
+                f"Pre-allocated regions consume the entire DMM region "
+                f"({region_size} bytes); no space remains."
+            )
+
+        def _align(samples: int) -> Tuple[int, int]:
+            """Return (buffer_size_bytes, offset_bytes) for one channel."""
+            samples = math.ceil(samples / SAMPLE_ALIGNMENT) * SAMPLE_ALIGNMENT
+            buf_bytes = samples * 2  # int16 = 2 bytes per sample
+            if buf_bytes < MIN_BUFFER_BYTES:
+                buf_bytes = MIN_BUFFER_BYTES
+            offset = math.ceil(buf_bytes / MIN_BLOCK_BYTES) * MIN_BLOCK_BYTES
+            return buf_bytes, offset
+
+        def _expand(
+            channels: List[int], samples: Union[int, List[int]]
+        ) -> List[Tuple[int, int]]:
+            """Expand and align a channel/samples specification."""
+            if isinstance(samples, int):
+                samples_list = [samples] * len(channels)
+            else:
+                if len(samples) != len(channels):
+                    raise ValueError(
+                        f"samples list has {len(samples)} entries but "
+                        f"{len(channels)} channels were requested."
+                    )
+                samples_list = list(samples)
+            return [_align(s) for s in samples_list]
+
+        acq_aligned = _expand(acq_channels, acq_samples) if acq_channels else []
+        gen_aligned  = _expand(gen_channels, gen_samples) if gen_channels else []
+
+        total_required = sum(offset for _, offset in acq_aligned + gen_aligned)
+        if total_required > available:
+            raise ValueError(
+                f"Insufficient DMM memory: requested layout requires "
+                f"{total_required} bytes but only {available} bytes are available "
+                f"({region_size} bytes total, "
+                f"{start_addr - region_start} bytes pre-allocated)."
+            )
+
+        if total_required > available * WARN_THRESHOLD:
+            warnings.warn(
+                f"DMM memory usage is high: {total_required} of {available} bytes used "
+                f"({100 * total_required / available:.1f}% of available DMM region).",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        def _build_layout(
+            aligned: List[Tuple[int, int]], addr: int
+        ) -> Tuple[List[Tuple[int, int]], int]:
+            layout = []
+            for buf_bytes, offset in aligned:
+                layout.append((addr, buf_bytes))
+                addr += offset
+            return layout, addr
+
+        acq_layout, addr = _build_layout(acq_aligned, start_addr)
+        gen_layout, _    = _build_layout(gen_aligned, addr)
+
+        return acq_layout, gen_layout
+
+    ### DMA ###
+    
+    def dma_get_region(
+        self) -> Tuple[int, int]:
+        """Retrieves the DMA memory region from Red Pitaya.
+
+        Returns:
+            Tuple[int, int]: ``(start_address, size_bytes)``.
+        """
+        start = int(self.txrx_txt("ACQ:AXI:START?"))
+        size  = int(self.txrx_txt("ACQ:AXI:SIZE?"))
+        return start, size
+
+    def dma_calc_buffer_layout(
+        self,
+        channels: List[int],
+        samples_per_channel: Union[int, List[int]],
+    ) -> List[Tuple[int, int]]:
+        """Calculates non-overlapping, page-aligned DMA buffer addresses.
+
+        Thin wrapper around :meth:`dmm_calc_buffer_layout` for
+        acquisition-only workflows. See :meth:`dmm_calc_buffer_layout` for full
+        details, hardware constraints, and the ``pre_allocated`` option for
+        mixed DMA/DMG setups.
+
+        Args:
+            channels (List[int]): Channel numbers to allocate (e.g. ``[1, 2]``).
+            samples_per_channel (int | List[int]): Total samples per channel.
+
+        Returns:
+            List[Tuple[int, int]]: ``[(start_address, buffer_size_bytes), ...]``
+                in the same order as *channels*.
+        """
+        acq_layout, _ = self.dmm_calc_buffer_layout(channels, samples_per_channel)
+        return acq_layout
+
+    def dma_check_regions(
+        self,
+        regions: List[Tuple[int, int]]
+    ) -> None:
+        """Validates that a list of DMA buffer regions do not overlap.
+
+        Args:
+            regions (List[Tuple[int, int]]): ``[(start_address, size_in_bytes), ...]``
+
+        Raises:
+            ValueError: If any two regions overlap.
+        """
+        sorted_regions = sorted(regions, key=lambda r: r[0])
+        for i in range(len(sorted_regions) - 1):
+            start_a, size_a = sorted_regions[i]
+            start_b, _ = sorted_regions[i + 1]
+            if start_a + size_a > start_b:
+                raise ValueError(
+                    f"DMA region overlap: region at 0x{start_a:x} (size {size_a} B) "
+                    f"overlaps with region at 0x{start_b:x}."
+                )
+
+
+    def dma_set(
+        self,
+        decimation: int = 1,
+        data_format: DataFormat = DataFormat.BIN,
+        data_units: Units = Units.RAW,
+        byte_order: ByteOrder = ByteOrder.LEND
+    ) -> None:
+        """Sets global DMA acquisition settings shared across all channels.
+
+        Args:
+            decimation (int, optional): Decimation factor. Defaults to 1.
+            data_format (DataFormat, optional): Data format (ASCII or BIN). Defaults to DataFormat.BIN.
+            data_units (Units, optional): Data units (RAW or VOLTS). Defaults to Units.RAW.
+            byte_order (ByteOrder, optional): Byte order for binary data (LEND or BEND). Defaults to ByteOrder.LEND.
+        """
+        self.tx_txt(f"ACQ:AXI:DEC {decimation}")
+        self.tx_txt(f"ACQ:AXI:DATA:Units {data_units.value}")
+        self.tx_txt(f"ACQ:DATA:FORMAT {data_format.value}")
+        self.tx_txt(f"ACQ:DATA:BYTE:ORDER {byte_order.value}")
+        self.check_error()
+
+    def dma_ch_set(
+        self,
+        channel: int,
+        buffer_start_address: int,
+        buffer_size: int,
+        trigger_delay: int = 0,
+    ) -> None:
+        """Sets per-channel DMA acquisition settings.
+
+        Args:
+            channel (int): Input channel (1 or 2; 1–4 for STEMlab 125-14 4-Input).
+            buffer_start_address (int): Start address of the DMA buffer in DDR3 RAM.
+                Use :meth:`dma_calc_buffer_layout` to calculate non-overlapping addresses.
+            buffer_size (int): Size of the DMA buffer in bytes.
+            trigger_delay (int, optional): Trigger delay in samples. Defaults to 0.
+        """
+        #TODO should channel value be checked against board model (1-2 for STEMlab 125-14 and 1-4 for STEMlab 125-14 4-Input)?
+        self.tx_txt(f"ACQ:AXI:SOUR{channel}:Trig:Dly {trigger_delay}")
+        self.tx_txt(f"ACQ:AXI:SOUR{channel}:SET:Buffer {buffer_start_address},{buffer_size}")
+        self.check_error()
+
+    def dma_get_settings(self) -> List[str]:
+        """Retrieves global DMA acquisition settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[decimation, data_units, data_format]``.
+        """
+        settings = [
+            self.txrx_txt("ACQ:AXI:DEC?"),
+            self.txrx_txt("ACQ:AXI:DATA:Units?"),
+            self.txrx_txt("ACQ:DATA:FORMAT?"),
+        ]
+        return settings
+
+    def dma_ch_get_settings(self, channel: int) -> List[str]:
+        """Retrieves per-channel DMA acquisition settings from Red Pitaya.
+
+        Returns:
+            List[str]: ``[trigger_delay]``.
+        """
+        settings = [
+            self.txrx_txt(f"ACQ:AXI:SOUR{channel}:Trig:Dly?"),
+        ]
+        return settings
+    
+    def dma_mode(
+        self,
+        channel: int,
+        enable: bool
+    ) -> None:
+        """Enables or disables the DMA mode for the specified channel."""
+        self.tx_txt(f"ACQ:AXI:SOUR{channel}:ENable {'ON' if enable else 'OFF'}")
+        self.check_error()
+        return
+
+
+    def dma_data(
+        self,
+        chan: int,
+        pos: int,
+        size: int,
+        data_format: Optional[DataFormat] = None,
+        data_units: Optional[Units] = None,
+        byte_order: Optional[ByteOrder] = None,
+    ) -> np.ndarray:
+        """Reads ``size`` samples from the DMA buffer starting at ``pos``.
+
+        When *data_format*, *data_units*, and *byte_order* are supplied (i.e.
+        the same values passed to :meth:`dma_set`), no extra SCPI queries are
+        issued and the call reduces to a single round-trip. If any parameter is
+        omitted (``None``) its value is queried from the board instead, which
+        is safe but adds latency.
+
+        Args:
+            chan (int): Input channel (1 or 2; 1–4 for STEMlab 125-14 4-Input).
+            pos (int): Start position in the circular buffer (see
+                :meth:`dma_get_trig_pos`).
+            size (int): Number of samples to read.
+            data_format (DataFormat, optional): Expected data format
+                (``DataFormat.BIN`` or ``DataFormat.ASCII``). Defaults to
+                ``None`` (queried from board).
+            data_units (Units, optional): Expected data units
+                (``Units.VOLTS`` or ``Units.RAW``). Defaults to ``None``
+                (queried from board).
+            byte_order (ByteOrder, optional): Byte order for binary data
+                (``ByteOrder.LEND`` or ``ByteOrder.BEND``). Only used when
+                *data_format* is ``DataFormat.BIN``. Defaults to ``None``
+                (queried from board).
+
+        Returns:
+            np.ndarray: Captured data as float64.
+        """
+        units_str  = data_units.value   if data_units   is not None else self.txrx_txt("ACQ:AXI:DATA:UNITS?")
+        format_str = data_format.value  if data_format  is not None else self.txrx_txt("ACQ:DATA:FORMAT?")
+
+        self.tx_txt(f"ACQ:AXI:SOUR{chan}:DATA:Start:N? {pos},{size}")
+
+        if format_str == "BIN":
+            buff_byte = self.rx_arb()
+            if not isinstance(buff_byte, bytes):
+                raise ValueError("Failed to receive binary DMA data")
+
+            if byte_order is not None:
+                order_str = byte_order.value
+            else:
+                try:
+                    order_str = self.txrx_txt("ACQ:DATA:BYTE:ORDER?").strip()
+                except Exception:
+                    order_str = ByteOrder.BEND.value    # big-endian is the board default
+
+            if order_str == ByteOrder.LEND.value:
+                float_dtype, int_dtype = "<f4", "<i2"
+            else:
+                float_dtype, int_dtype = ">f4", ">i2"
+
+            if units_str == Units.VOLTS.value:
+                buff = np.frombuffer(buff_byte, dtype=float_dtype)
+            else:  # RAW
+                buff = np.frombuffer(buff_byte, dtype=int_dtype)
+            buff = buff.astype(np.float64)
+        else:
+            buff_string = self.rx_txt().strip("{}\n\r").replace("  ", "").split(",")
+            buff = np.array(buff_string, dtype=np.float64)
+
+        self.check_error()
+        return buff
+
+
+
+    ### DMG ###
+
+    def dmg_get_region(
+        self) -> Tuple[int, int]:
+        """Retrieves the DMG memory region from Red Pitaya.
+
+        Returns:
+            Tuple[int, int]: ``(start_address, size_bytes)``.
+        """
+        start = int(self.txrx_txt("GEN:AXI:START?"))
+        size  = int(self.txrx_txt("GEN:AXI:SIZE?"))
+        return start, size
+
+    def dmg_calc_buffer_layout(
+        self,
+        channels: List[int],
+        samples_per_channel: Union[int, List[int]],
+    ) -> List[Tuple[int, int]]:
+        """Calculates non-overlapping, page-aligned DMG buffer regions.
+
+        Thin wrapper around :meth:`dmm_calc_buffer_layout` for generation-only
+        workflows. See :meth:`dmm_calc_buffer_layout` for full details and the
+        ``pre_allocated`` option for mixed DMA/DMG setups.
+
+        Args:
+            channels (List[int]): Channel numbers to allocate (e.g. ``[1, 2]``).
+            num_samples (int): Number of waveform samples per channel.
+
+        Returns:
+            List[Tuple[int, int]]: ``[(start_address, buffer_size_bytes), ...]``
+                in the same order as *channels*. Pass directly to
+                :meth:`dmg_ch_set`.
+        """
+        _, gen_layout = self.dmm_calc_buffer_layout(
+            gen_channels=channels,
+            gen_samples=samples_per_channel,
+        )
+        return gen_layout
+
+
+    def dmg_ch_set(
+        self,
+        channel: int,
+        start_address: int,
+        buffer_size_bytes: int,
+        decimation: int = 1,
+    ) -> None:
+        """Reserves DDR memory and sets the decimation for one DMG channel.
+
+        Combines the ``SOUR<n>:AXI:RESERVE`` and ``SOUR<n>:AXI:DEC`` commands.
+        Use :meth:`dmg_calc_buffer_layout` or :meth:`dmm_calc_buffer_layout` to
+        obtain non-overlapping ``(start_address, buffer_size_bytes)`` values.
+
+        Args:
+            channel (int): Output channel (1 or 2).
+            start_address (int): Start address of the buffer in DDR3 RAM.
+            buffer_size_bytes (int): Buffer size in bytes (int16 samples × 2).
+            decimation (int, optional): Decimation factor. Defaults to 1.
+        """
+        end_address = start_address + buffer_size_bytes
+        self.tx_txt(f"SOUR{channel}:AXI:RESERVE {start_address},{end_address}")
+        self.tx_txt(f"SOUR{channel}:AXI:DEC {decimation}")
+        self.check_error()
+
+    def dmg_write_waveform(
+        self,
+        chan: int,
+        data: np.ndarray,
+        offset: int = 0,
+        amplitude: float = 1.0,
+        chunk_size: int = 2**14,
+    ) -> None:
+        """Writes a waveform array into the Deep Memory Generation buffer.
+
+        The input *data* is automatically normalised to the ``[-1, 1]``
+        full-scale range by dividing by its peak absolute value before
+        transmission, so any amplitude scale is accepted. A zero-only array
+        is sent as-is. Large arrays are sent in chunks so the SCPI server
+        message-size limit is never exceeded.
+
+        Call :meth:`dmg_apply_calib` after writing to apply DAC calibration.
+
+        Args:
+            chan (int): Output channel (1 or 2).
+            data (np.ndarray): Waveform samples. Any floating-point scale is
+                accepted; the array is normalised to ``[-1, 1]`` internally.
+            offset (int): Sample offset into the reserved region for writing
+                data in portions. Default: ``0``.
+            amplitude (float): Output amplitude as a fraction of full scale,
+                in the range ``(0, 1]``. Default: ``1.0``.
+            chunk_size (int): Maximum samples per SCPI message. Default: 2**14.
+        """
+        amplitude = float(np.clip(amplitude, 0.0, 1.0))
+        # float32 is sufficient for a 14-bit DAC and halves memory vs float64
+        data = np.asarray(data, dtype=np.float32)
+        max_abs = float(np.max(np.abs(data)))
+        if max_abs > 0.0:
+            # single multiply: normalise and scale in one vectorised pass
+            data = np.clip(data * (amplitude / max_abs), -1.0, 1.0)
+        for i in range(0, len(data), chunk_size):
+            chunk = data[i:i + chunk_size]
+            self.tx_txt(
+                f"SOUR{chan}:AXI:OFFSET{offset + i}:DATA{len(chunk)} "
+                + ",".join(np.char.mod("%.6f", chunk))
+            )
+        self.check_error()
+
+    def dmg_apply_calib(self, channel: int) -> None:
+        """Applies DAC calibration to the DMG buffer of the specified channel.
+
+        Must be called after :meth:`dmg_write_waveform` and before starting
+        generation.
+
+        Args:
+            channel (int): Output channel (1 or 2).
+        """
+        self.tx_txt(f"SOUR{channel}:AXI:SET:CALIB")
+        self.check_error()
+
+    def dmg_mode(
+        self,
+        channel: int,
+        enable: bool,
+    ) -> None:
+        """Enables or disables Deep Memory Generation mode for one channel.
+
+        Args:
+            channel (int): Output channel (1 or 2).
+            enable (bool): True to enable, False to disable.
+        """
+        self.tx_txt(f"SOUR{channel}:AXI:ENable {'ON' if enable else 'OFF'}")
+        self.check_error()
+
+
+    def dmg_release(self, channel: int) -> None:
+        """Releases the reserved DDR memory for the specified DMG channel.
+
+        Should be called when generation is complete or when reconfiguring
+        the buffer layout.
+
+        Args:
+            channel (int): Output channel (1 or 2).
+        """
+        self.tx_txt(f"SOUR{channel}:AXI:RELEASE")
+        self.check_error()
+
 
     ### LCR ###
 
@@ -1991,24 +2772,42 @@ class scpi (object):
         """Reset Command"""
         return self.tx_txt('*RST')
 
-    def sre(self, value: int):
+    def sre(self):
         """Service Request Enable Command"""
-        return self.tx_txt(f'*SRE {value}')
+        #TODO: IEEE 488.2 requires a mask value argument: *SRE <value>. The underlying SCPI command handling needs to be updated by developers to accept the value.
+        return self.tx_txt('*SRE')
 
     def sre_q(self):
         """Service Request Enable Query"""
         return self.txrx_txt('*SRE?')
 
-    def stb_q(self):
-        """Read Status Byte Query"""
-        return self.txrx_txt('*STB?')
+    def stb_q(self) -> Optional[str]:
+        """Read Status Byte Query.
+        
+        Returns:
+            Current status byte value or None if error
+        """
+        try:
+            return self.txrx_txt('*STB?')
+        except (ConnectionError, socket.error):
+            return None
 
-    # :SYSTem
+# :SYSTem
+    def err_c(self) -> str:
+        """Error count query.
+        
+        Returns:
+            Number of errors in error queue
+        """
+        return self.txrx_txt('SYSTem:ERRor:COUNt?')
 
-    def err_c(self):
-        """Error count."""
-        return self.txrx_txt('SYST:ERR:COUN?')
-
-    def err_n(self):
-        """Error next."""
-        return self.txrx_txt('SYST:ERR:NEXT?')
+    def err_n(self) -> Optional[str]:
+        """Error next query.
+        
+        Returns:
+            Next error from error queue or None if error
+        """
+        try:
+            return self.txrx_txt('SYSTem:ERRor:NEXT?')
+        except (ConnectionError, socket.error):
+            return None

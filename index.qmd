@@ -1,8 +1,8 @@
 # Unsyllabus {.unnumbered}
 
-| Name              | Description                      |
-|-------------------|----------------------------------|
-| Kursus            | M 5.3 Elektronik (ELK)           |
-| Semester          | WiSe2025/26                      |
-| Dozent            | Prof. Dr.-Ing. M. Meiners        |
-| Seminar           | Die., 9 Uhr bis 13 Uhr, E 507    |
+| Name     | Description                   |
+|----------|-------------------------------|
+| Kursus   | M 5.3 Elektronik (ELK)        |
+| Semester | WiSe2026/27                   |
+| Dozent   | Prof. Dr.-Ing. M. Meiners     |
+| Seminar  | Die., 9 Uhr bis 13 Uhr, E 507 |
