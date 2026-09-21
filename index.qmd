@@ -1,3 +1,1 @@
 # BundesUmweltWettbewerb {.unnumbered}
-
-Basierend auf den Arebiten des Max-Planck-Instituts für marine Mikrobiologie beschäftige ich mich mit den Auswirkungen von Mikroorganismen im Sand für unsere Umwelt [@ahmerkampEffectSedimentGrain2020],[@probandtMicrobialLifeSand2018].

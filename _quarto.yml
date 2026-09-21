@@ -5,7 +5,7 @@ project:
 lang: de
 
 book:
-  title: "Mikroorganismen im Sand und deren Auswirkung auf die Umwelt"
+  title: "Untersuchung der mikrobiellen Besiedelung und Stoffwechselaktivität in durchlässigen Meeresboden-Sedimenten"
   author:
     - name: "Jasper Meiners"
       orcid: ""
@@ -40,7 +40,8 @@ book:
   chapters:
     - index.qmd
     - 01_intro.qmd
-    - references.qmd
+    - 02_Hauptteil.qmd
+    - 03_Zusammenfassung.qmd
        
   output-file: "buw"
 
