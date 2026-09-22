@@ -42,17 +42,14 @@ book:
     - 01_intro.qmd
     - 02_Hauptteil.qmd
     - 03_Zusammenfassung.qmd
+    - references.qmd
        
   output-file: "buw"
 
 # Bibliography
 bibliography: bibliography/references.bib
-# csl: "https://raw.githubusercontent.com/citation-style-language/styles/master/ieee.csl"
 csl: bibliography/ieee.csl
 
-execute:
-  # freeze: true
-  enabled: true
 
 format:
   html:
@@ -75,45 +72,48 @@ format:
   #   # fontcolor: "black"
   #   highlight-style: github
 
-  typst: default
+  # typst: default
+  #    fontsize: 14pt
+  #    mainfont: "Times New Roman"
+  #    mathfont: "TeX Gyre Termes Math"
 
-  # pdf:
-  #   documentclass: scrbook
-  #   classoption: [twoside]
+  pdf:
+    documentclass: scrreprt  # scrbook
+    classoption: [twoside]
 
-  #   keep-tex: true
+    # keep-tex: true
 
-  #   toc: true
-  #   toc-depth: 3
-  #   # toc-title: "Table of contents"
-  #   # lof: true
-  #   # lot: true
+    toc: true
+    toc-depth: 3
+    # toc-title: "Table of contents"
+    # lof: true
+    # lot: true
 
-  #   number-sections: true
-  #   number-depth: 2
+    number-sections: true
+    number-depth: 2
         
-  #   papersize: a4
+    papersize: a4
         
-  #   geometry:
-  #     - inner=3cm
-  #     - outer=4cm
-  #     - top=3cm
-  #     - bottom=4cm
-  #     - headsep=22pt
-  #     - headheight=11pt
-  #     - footskip=33pt
-  #     - ignorehead
-  #     - ignorefoot
-  #     - heightrounded
+    # geometry:
+    #   - inner=3cm
+    #   - outer=4cm
+    #   - top=3cm
+    #   - bottom=4cm
+    #   - headsep=22pt
+    #   - headheight=11pt
+    #   - footskip=33pt
+    #   - ignorehead
+    #   - ignorefoot
+    #   - heightrounded
 
-  #   fontsize: 14pt
-  #   pdfengine: xelatex
+    fontsize: 14pt
+    pdfengine: xelatex
 
-  #   mainfont: "Times New Roman"
-  #   sansfont: "Arial"
-  #   monofont: "Courier New"
-  #   mathfont: "TeX Gyre Termes Math"
-  #   highlight-style: pygments
+    mainfont: "Times New Roman"
+  #  sansfont: "Arial"
+  #  monofont: "Courier New"
+  #  mathfont: "TeX Gyre Termes Math"
+    highlight-style: pygments
     
   #   # include-in-header:
   #   #   - frontmatter/header.tex
