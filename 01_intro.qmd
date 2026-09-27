@@ -1,11 +1,22 @@
 # Einleitung und Übersicht
 
-Basierend auf den Arbeiten des Max-Planck-Instituts für marine Mikrobiologie beschäftige ich mich mit den Auswirkungen von Mikroorganismen im Sand für unsere Umwelt.
-
-## Forschungsfrage
+Die folgende wissenschaftliche Ausarbeitung ist aus der Motivation entstanden, verstehen zu wollen, wie sich kleinste Organismen an meinem Lieblingsort, dem Strand von St.-Peter-Ording (SPO), verhalten und welche Auswirkung sie auf uns haben, denn nicht nur SPO hat einen Strand mit Sand.
+ 
+Dabei stütze ich mich auf den Arbeiten des Max-Planck-Instituts für marine Mikrobiologie in Bremen.
 
 ## Artikel 1
 [@ahmerkampEffectSedimentGrain2020]
 
 ## Artikel 2
 @probandtMicrobialLifeSand2018
+
+## Forschungsfragen 
+
+ - Wie verhalten sich Mikroorganismen in Meeressedimenten ?
+ - Wie verhalten sie sich auf einzelnen Sandkörnern?
+  
+
+
+
+
+

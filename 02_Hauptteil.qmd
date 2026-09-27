@@ -1,1 +1,20 @@
 # Hauptteil
+
+## Das Verhalten im Meeressediment
+
+### Sedimentoberfläche
+
+![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){#fig-mikrobe}
+
+In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem Sandkorn.
+
+### Porenwasserfluß 
+
+
+## Die Betrachtung einzelner Körner
+
+
+### Besiedelungsmuster
+
+
+### Diversität der Mikroben 
