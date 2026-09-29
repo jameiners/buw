@@ -107,13 +107,13 @@ format:
     #   - ignorefoot
     #   - heightrounded
 
-    # fontsize: 14pt
+    fontsize: 14pt
     pdfengine: xelatex
 
     mainfont: "Times New Roman"
-  #  sansfont: "Arial"
-  #  monofont: "Courier New"
-  #  mathfont: "TeX Gyre Termes Math"
+    # sansfont: "Arial"
+    # monofont: "Courier New"
+    # mathfont: "TeX Gyre Termes Math"
     highlight-style: pygments
     
   #   # include-in-header:
