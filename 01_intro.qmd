@@ -6,6 +6,8 @@ Dabei stütze ich mich auf den Arbeiten des Max-Planck-Instituts für marine Mik
 
 ## Artikel 1
 
+In diesem Artikel, Welcher von [] verfasst wurde geht es darum, wie sich die Oberfläche des Sandes und der Wasserfluss auf die Dichte und und den Stoffwechsel der Mikroben auswirkt 
+
 {{< lipsum >}}
 [@ahmerkampEffectSedimentGrain2020]
 
