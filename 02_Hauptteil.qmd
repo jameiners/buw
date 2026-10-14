@@ -22,10 +22,30 @@ In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem San
 
 ### Porenwasserfluss
 
-xDer Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
+Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
 wird und als Transportmittel genutzt wird.
 
-{{< lipsum >}}
+Flow-through reactor (FTR) @Roychoudhury_1998
+
+$$
+\frac{C}{C_0} = 0.5 \cdot erf \left( \frac{1 - t^*}{2 \sqrt{\alpha_L^* t^*}} \right)
+$$
+
+```{python}
+#| label: fig-ftr
+#| fig-cap: "FTR Analyse"
+import numpy as np
+from scipy import special
+import matplotlib.pyplot as plt
+
+z = np.linspace(-3, 3)
+
+plt.plot(z, special.erf(z))
+plt.xlabel('$z$')
+plt.ylabel('$erf(z)$')
+plt.show()
+```
+
 
 ## Die Betrachtung einzelner Körner
 
