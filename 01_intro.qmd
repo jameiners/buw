@@ -1,8 +1,8 @@
 # Einleitung und Übersicht
 
-Die folgende wissenschaftliche Ausarbeitung ist aus der Motivation entstanden, verstehen zu wollen, wie sich kleinste Organismen an meinem Lieblingsort, dem Strand von St.-Peter-Ording (SPO), verhalten und welche Auswirkung sie auf uns haben, denn nicht nur SPO hat einen Strand mit Sand.
+Die folgende wissenschaftliche Untersuchung ist aus der Motivation entstanden, verstehen zu wollen, wie sich kleinste Organismen an meinem Lieblingsort, dem Strand von St.-Peter-Ording (SPO), verhalten und welche Auswirkung sie auf uns haben, denn nicht nur SPO hat einen Strand mit Sand.
  
-Dabei stütze ich mich auf den Arbeiten des Max-Planck-Instituts für marine Mikrobiologie in Bremen.
+Dabei stütze ich mich auf Grundlagenarbeiten des Max-Planck-Instituts für marine Mikrobiologie in Bremen.
 
 ## Artikel 1
 
@@ -18,8 +18,9 @@ In diesem Artikel, Welcher von [] verfasst wurde geht es darum, wie sich die Obe
 
 ## Forschungsfragen 
 
- - Wie verhalten sich Mikroorganismen in Meeressedimenten ?
- - Wie verhalten sie sich auf einzelnen Sandkörnern?
+- Wie verhalten sich Mikroorganismen in Meeressedimenten?
+ 
+- Wie verhalten sie sich auf einzelnen Sandkörnern?
   
 
 

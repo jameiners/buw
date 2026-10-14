@@ -1,4 +1,11 @@
-# Hauptteil
+# Schwerpunktsthemen
+
+* Wissensteil (theoretischer Hintergrund), 
+
+* wissenschaftlicher Handlungsteil (z.B. fachbezogene Experimente/Versuche) und 
+
+* gesellschaftliches Handeln (z.B. projektbezogene Öffentlichkeitsarbeit).
+
 
 ## Das Verhalten im Meeressediment
 
@@ -15,7 +22,7 @@ In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem San
 
 ### Porenwasserfluss
 
-Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
+xDer Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
 wird und als Transportmittel genutzt wird.
 
 {{< lipsum >}}
