@@ -8,6 +8,7 @@ _build
 *_files
 _book
 .quarto
+.vscode
 *.csv
 *.raw
 *.mat
@@ -26,6 +27,7 @@ _freeze
 
 ## Core latex/pdflatex auxiliary files:
 *.aux
+*.tex
 *.lof
 *.log
 *.lot

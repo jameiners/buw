@@ -95,17 +95,17 @@ format:
         
     papersize: a4
         
-    # geometry:
-    #   - inner=3cm
-    #   - outer=4cm
-    #   - top=3cm
-    #   - bottom=4cm
-    #   - headsep=22pt
-    #   - headheight=11pt
-    #   - footskip=33pt
-    #   - ignorehead
-    #   - ignorefoot
-    #   - heightrounded
+    geometry:
+      - inner=3cm
+      - outer=4cm
+      - top=3cm
+      - bottom=4cm
+      - headsep=22pt
+      - headheight=11pt
+      - footskip=33pt
+      - ignorehead
+      - ignorefoot
+      - heightrounded
 
     fontsize: 14pt
     pdfengine: xelatex
