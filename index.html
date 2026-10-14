@@ -2,21 +2,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="de" xml:lang="de"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.9.34">
+<meta name="generator" content="quarto-1.10.19">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Jasper Meiners">
 
-<title>Mikroorganismen im Sand und deren Auswirkung auf die Umwelt</title>
+<title>Untersuchung der mikrobiellen Besiedelung und Stoffwechselaktivität in durchlässigen Meeresboden-Sedimenten</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
 */
-code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
 div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
 ul.task-list{list-style: none;}
 ul.task-list li input[type="checkbox"] {
@@ -24,27 +27,7 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for citations */
-div.csl-bib-body { }
-div.csl-entry {
-  clear: both;
-  margin-bottom: 0em;
-}
-.hanging-indent div.csl-entry {
-  margin-left:2em;
-  text-indent:-2em;
-}
-div.csl-left-margin {
-  min-width:2em;
-  float:left;
-}
-div.csl-right-inline {
-  margin-left:2em;
-  padding-left:1em;
-}
-div.csl-indent {
-  margin-left: 2em;
-}</style>
+</style>
 
 
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
@@ -61,10 +44,10 @@ div.csl-indent {
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-4e59e36ac2b5fe91e59ce550ff164ef1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-c17bf2369ec451fec7864fad2b46db76.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-9d76ca62eed1c98cead66c40863d9800.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -120,7 +103,7 @@ div.csl-indent {
   <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
     <div class="pt-lg-2 mt-2 text-left sidebar-header">
     <div class="sidebar-title mb-0 py-0">
-      <a href="./">Mikroorganismen im Sand und deren Auswirkung auf die Umwelt</a> 
+      <a href="./">Untersuchung der mikrobiellen Besiedelung und Stoffwechselaktivität in durchlässigen Meeresboden-Sedimenten</a> 
         <div class="sidebar-tools-main tools-wide">
     <a href="https://github.com/jameiners/buw/" title="Quellcode" class="quarto-navigation-tool px-1" aria-label="Quellcode"><i class="bi bi-github"></i></a>
     <a href="./buw.pdf" title="Download PDF" class="quarto-navigation-tool px-1" aria-label="Download PDF"><i class="bi bi-file-pdf"></i></a>
@@ -148,7 +131,25 @@ div.csl-indent {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./01_intro.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Einleitung</span></span></a>
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Einleitung und Übersicht</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./02_Hauptteil.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Schwerpunktsthemen</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./03_Interpretation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Interpretation</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./04_Zusammenfassung.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Zusammenfassung</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -167,7 +168,12 @@ div.csl-indent {
     <h2 id="toc-title">Inhaltsverzeichnis</h2>
    
   <ul>
-  <li><a href="#bundesumweltwettbewerb" id="toc-bundesumweltwettbewerb" class="nav-link active" data-scroll-target="#bundesumweltwettbewerb">BundesUmweltWettbewerb</a></li>
+  <li><a href="#bundesumweltwettbewerb" id="toc-bundesumweltwettbewerb" class="nav-link active" data-scroll-target="#bundesumweltwettbewerb">BundesUmweltWettbewerb</a>
+  <ul class="collapse">
+  <li><a href="#was-ist-der-bundesumweltwettbewerb" id="toc-was-ist-der-bundesumweltwettbewerb" class="nav-link" data-scroll-target="#was-ist-der-bundesumweltwettbewerb">Was ist der BundesUmweltWettbewerb?</a></li>
+  <li><a href="#welche-aufgabe-gilt-es-zu-lösen" id="toc-welche-aufgabe-gilt-es-zu-lösen" class="nav-link" data-scroll-target="#welche-aufgabe-gilt-es-zu-lösen">Welche Aufgabe gilt es zu lösen?</a></li>
+  <li><a href="#welche-themen-sind-möglich" id="toc-welche-themen-sind-möglich" class="nav-link" data-scroll-target="#welche-themen-sind-möglich">Welche Themen sind möglich?</a></li>
+  </ul></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jameiners/buw/edit/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>Seite editieren</a></li><li><a href="https://github.com/jameiners/buw/issues/new" class="toc-action"><i class="bi empty"></i>Problem melden</a></li></ul></div></nav>
     </div>
@@ -176,7 +182,7 @@ div.csl-indent {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Mikroorganismen im Sand und deren Auswirkung auf die Umwelt</h1>
+<h1 class="title">Untersuchung der mikrobiellen Besiedelung und Stoffwechselaktivität in durchlässigen Meeresboden-Sedimenten</h1>
 </div>
 
 
@@ -185,7 +191,7 @@ div.csl-indent {
   <div class="quarto-title-meta-heading">Zugehörigkeiten</div>
   
     <div class="quarto-title-meta-contents">
-    <p class="author">Jasper Meiners <a href="mailto:Jasper.Meiners@icloud.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/true" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+    <p class="author">Jasper Meiners <a href="mailto:Jasper.Meiners@icloud.com" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> <a href="https://orcid.org/true" class="quarto-title-author-orcid" aria-label="ORCID profile for Jasper Meiners"> <img alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
   </div>
   <div class="quarto-title-meta-contents">
         <p class="affiliation">
@@ -205,7 +211,7 @@ div.csl-indent {
     <div>
     <div class="quarto-title-meta-heading">Veröffentlichungsdatum</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">18. September 2026</p>
+      <p class="date">14. Oktober 2026</p>
     </div>
   </div>
   
@@ -219,17 +225,33 @@ div.csl-indent {
 
 <section id="bundesumweltwettbewerb" class="level1 unnumbered">
 <h1 class="unnumbered">BundesUmweltWettbewerb</h1>
-<p>Basierend auf den Arebiten des Max-Planck-Instituts für marine Mikrobiologie beschäftige ich mich mit den Auswirkungen von Mikroorganismen im Sand für unsere Umwelt <span class="citation" data-cites="ahmerkampEffectSedimentGrain2020"><a href="references.html#ref-ahmerkampEffectSedimentGrain2020" role="doc-biblioref">[1]</a></span>,<span class="citation" data-cites="probandtMicrobialLifeSand2018"><a href="references.html#ref-probandtMicrobialLifeSand2018" role="doc-biblioref">[2]</a></span>.</p>
+<section id="was-ist-der-bundesumweltwettbewerb" class="level2">
+<h2 class="anchored" data-anchor-id="was-ist-der-bundesumweltwettbewerb">Was ist der BundesUmweltWettbewerb?</h2>
+<p>Der BundesUmweltWettbewerb (BUW) ist ein jährlich durchgeführter, bundesweiter Projektwettbewerb für Jugendliche und junge Erwachsene. Ziel des BUW ist die Förderung junger Talente im Umweltbereich.</p>
+<p>Durchgeführt wird der Wettbewerb in zwei Alterskategorien:</p>
+<ul>
+<li><p>BUW I: 10 – 16 Jahre: Einzelpersonen oder Teams bis zu 20 Personen.</p></li>
+<li><p>BUW II: 17 – 20 Jahre: Einzelpersonen oder Teams bis zu 6 Personen.</p></li>
+</ul>
+</section>
+<section id="welche-aufgabe-gilt-es-zu-lösen" class="level2">
+<h2 class="anchored" data-anchor-id="welche-aufgabe-gilt-es-zu-lösen">Welche Aufgabe gilt es zu lösen?</h2>
+<p>Mit ihren Projekten sollen die Wettbewerbsteilnehmerinnen und -teilnehmer Ursachen von Umweltproblemen auf den Grund gehen und diese mit Kreativität und Engagement nachhaltig lösen. Dafür steht das Wettbewerbsmotto: “Vom Wissen zum nachhaltigen Handeln”.</p>
+<p>Wissenschaftliche Vorgehensweisen, schlüssige nachhaltige Denkansätze und lösungsorientiertes Handeln sind wichtige Merkmale guter BUW-Projekte.</p>
+<p>In der Projektarbeit sollten möglichst drei Schwerpunkte berücksichtigt sein:</p>
+<ul>
+<li><p>ein Wissensteil (theoretischer Hintergrund),</p></li>
+<li><p>ein wissenschaftlicher Handlungsteil (z.B. fachbezogene Experimente/Versuche) und</p></li>
+<li><p>gesellschaftliches Handeln (z.B. projektbezogene Öffentlichkeitsarbeit).</p></li>
+</ul>
+</section>
+<section id="welche-themen-sind-möglich" class="level2">
+<h2 class="anchored" data-anchor-id="welche-themen-sind-möglich">Welche Themen sind möglich?</h2>
+<p>Das Spektrum der möglichen sowie frei wählbaren Projektthemen und Projektformate ist breit und reicht von wissenschaftlichen Untersuchungen, umwelttechnischen Entwicklungen über Umweltbildungsmaßnahmen und -kampagnen bis hin zu Medienprojekten. Wichtig ist, dass ein Umweltthema im Zentrum des Projektes steht.</p>
+<p>Naturschutz, Ökologie, Klima- und Ressourcenschutz, Technik, Wirtschaft und Konsum, Politik, Gesundheit sowie Kultur sind nur einige Themenbereiche für BUW-Projekte im Kontext der Umsetzung der Nachhaltigkeitsziele.</p>
 
 
-<div id="refs" class="references csl-bib-body" data-entry-spacing="0" role="list" style="display: none">
-<div id="ref-ahmerkampEffectSedimentGrain2020" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[1] </div><div class="csl-right-inline">S. Ahmerkamp <em>u.&nbsp;a.</em>, <span>„The Effect of Sediment Grain Properties and Porewater Flow on Microbial Abundance and Respiration in Permeable Sediments“</span>, <em>Sci Rep</em>, Bd. 10, Nr. 1, S. 3573, Feb. 2020, doi: <a href="https://doi.org/10.1038/s41598-020-60557-7">10.1038/s41598-020-60557-7</a>.</div>
-</div>
-<div id="ref-probandtMicrobialLifeSand2018" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[2] </div><div class="csl-right-inline">D. Probandt, T. Eickhorst, A. Ellrott, R. Amann, und K. Knittel, <span>„Microbial Life on a Sand Grain: From Bulk Sediment to Single Grains“</span>, <em>The ISME Journal</em>, Bd. 12, Nr. 2, S. 623–633, Feb. 2018, doi: <a href="https://doi.org/10.1038/ismej.2017.197">10.1038/ismej.2017.197</a>.</div>
-</div>
-</div>
+</section>
 </section>
 
 </main> <!-- /main -->
@@ -637,8 +659,8 @@ div.csl-indent {
   <div class="nav-page nav-page-previous">
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./01_intro.html" class="pagination-link" aria-label="Einleitung">
-        <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Einleitung</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./01_intro.html" class="pagination-link" aria-label="Einleitung und Übersicht">
+        <span class="nav-page-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Einleitung und Übersicht</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>

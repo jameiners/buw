@@ -2,18 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jameiners.github.io/buw/index.html</loc>
-    <lastmod>2026-09-18T16:57:34.802Z</lastmod>
+    <lastmod>2026-10-14T11:17:50.843Z</lastmod>
   </url>
   <url>
     <loc>https://jameiners.github.io/buw/01_intro.html</loc>
-    <lastmod>2026-09-18T16:55:53.715Z</lastmod>
+    <lastmod>2026-10-14T11:20:02.387Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jameiners.github.io/buw/02_Hauptteil.html</loc>
+    <lastmod>2026-10-14T11:24:03.154Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jameiners.github.io/buw/03_Interpretation.html</loc>
+    <lastmod>2026-09-29T12:18:10.512Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jameiners.github.io/buw/04_Zusammenfassung.html</loc>
+    <lastmod>2026-09-29T12:18:10.512Z</lastmod>
   </url>
   <url>
     <loc>https://jameiners.github.io/buw/references.html</loc>
-    <lastmod>2026-09-18T16:57:34.802Z</lastmod>
+    <lastmod>2026-09-29T12:18:11.876Z</lastmod>
   </url>
   <url>
     <loc>https://jameiners.github.io/buw/buw.pdf</loc>
-    <lastmod>2026-09-18T16:57:43.885Z</lastmod>
+    <lastmod>2026-10-14T11:29:33.147Z</lastmod>
   </url>
 </urlset>
