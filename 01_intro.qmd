@@ -1,22 +1,20 @@
 # Einleitung und Übersicht
 
-Die folgende wissenschaftliche Untersuchung ist aus der Motivation entstanden, verstehen zu wollen, wie sich kleinste Organismen an meinem Lieblingsort, dem Strand von St.-Peter-Ording (SPO), verhalten und welche Auswirkung sie auf uns haben, denn nicht nur SPO hat einen Strand mit Sand.
+Die folgende wissenschaftliche Untersuchung ist aus der Motivation entstanden, verstehen zu wollen, wie sich kleinste Organismen an meinem Lieblingsort, dem Strand von St.-Peter-Ording (SPO), verhalten und welche Auswirkungen sie auf uns haben, denn nicht nur SPO hat einen Strand mit Sand.
  
 Dabei stütze ich mich auf Grundlagenarbeiten des Max-Planck-Instituts für marine Mikrobiologie in Bremen.
 
 ## Artikel 1
+Dieser Artikel von Probandt et. al. @probandtMicrobialLifeSand2018, zeigt eine neue Betrachtungsweise in der Untersuchung von Mikroben in Sedimenten auf. Bisherige Analysen betrachteten nur größere Mengen Sand, sog. Bulk Sediment, engl., Probandt hingegen untersuchte das Verhalten von Mikroben auf einzelnen Sandkörnern.
 
-In diesem Artikel, Welcher von [] verfasst wurde geht es darum, wie sich die Oberfläche des Sandes und der Wasserfluss auf die Dichte und und den Stoffwechsel der Mikroben auswirkt 
-
-{{< lipsum >}}
-[@ahmerkampEffectSedimentGrain2020]
 
 ## Artikel 2
 
-{{< lipsum >}}
-@probandtMicrobialLifeSand2018
+In dem Artikel von Ahmerkamp et. al. @ahmerkampEffectSedimentGrain2020 geht es darum, wie sich die unterschiedlichen Oberflächen der Sandkörner und der Wasserporenfluss auf die Dichte der Besiedelung und den Stoffwechsel der Mikroben auswirken.
+
 
 ## Forschungsfragen 
+Aus den Themen der Artikel lassen sich folgende Forschungsfragen ableiten :
 
 - Wie verhalten sich Mikroorganismen in Meeressedimenten?
  
