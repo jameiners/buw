@@ -62,6 +62,7 @@ format:
     # backgroundcolor: "white"
     # fontcolor: "black"
     highlight-style: github
+    code-fold: true
 
   # epub:
   #   theme: flatly
@@ -115,6 +116,7 @@ format:
     # monofont: "Courier New"
     # mathfont: "TeX Gyre Termes Math"
     highlight-style: pygments
+    code-fold: true
     
   #   # include-in-header:
   #   #   - frontmatter/header.tex
