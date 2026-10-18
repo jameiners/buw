@@ -1,8 +1,25 @@
 # Zusammenfassung
 
-Zusammenfassend kann man sagen das der Sand der bei SPO ist und an anderen Stränden ein sehr guter Nährboden für Mikroben ist da es einen großen Porenwasserfluss gibt durch den sie versorgt werden, doch kommt es immer noch auf die Beschaffenheit des Sandkorns an wie und wo sie sich Mikroben Kolonien bilden.
+Zusammenfassend kann man sagen, dass der Sand, der in SPO und an anderen Stränden liegt, ein sehr guter Nährboden für Mikroben ist, da es einen großen Porenwasserfluss gibt durch den sie versorgt werden, doch kommt es immer noch auf die Beschaffenheit des Sandkorns an wie und wo sich Mikrobenkolonien bilden.
 
-Und man braucht keine großen Sand proben um eine großteil der Mikroben Filfalt zu entdecken sondern es reichen einzelne Sandkörner um vile verschiedene Mikroben zu finden. Und die Beobachtung einzelner Körner hat uns einen eindruck verschafft wie sich Mikroben auf auf einer viel kleineren bene Verhalten und vermehren und dadurch hat man viel genauer hingeschaut als bei den großen Sedimentproben 
+Man braucht keine großen Sandproben, um die Mikrobenvielfalt zu entdecken, es reichen einzelne Sandkörner aus, um viele verschiedene Mikroben zu finden. Die Beobachtung der Mikroben auf einer kleineren Ebene wie dem einzelnen Sandkorn im Vergleich zu einem Sandhaufen verschafft uns einen detailierten Eindruck, wie sich Mikroben verhalten und vermehren.
 
-Und ihre Existens ist sehr wichtig da sie wie kleine hoch effizente Bioreaktoren sind, in denen organischer Kohlenstoff remineralisirt wird und anorganischer Stickstoff zu N_2 reduziert wird, was sehr wichtig ist für die Umwelt. Den ohne die Reminealisirung der Mikroben könnte der Photoplankton keine Photosynthese betreiben, was dazuführen würde das kein Sauerstoff und keine neue Biomasse produziert werden würden. 
+Die Existens der Mikroben ist sehr wichtig für unsere Umwelt, da sie sich wie kleine hocheffizente Bioreaktoren verhalten, in denen organischer Kohlenstoff remineralisiert wird und anorganischer Stickstoff zu $N_2$ reduziert wird. Ohne Remineralisierung durch die Mikroben kann Photoplankton keine Photosynthese betreiben, so dass kein Sauerstoff und keine neue Biomasse produziert werden.[^1] 
 
+[^1]: Prompt: "Warum ist es wichtig Kohlenstoff zu remineralisieren?", 18.10.2026, 18:39 Uhr, Google
+
+{{< pagebreak >}}
+
+Die Reduktion des Stickstoffs ist aus mehreren Umwelt-, Gesundheits- und Klimagründen sehr wichtig [^2]:
+
+* *Gewässerschutz und Algenwachstum*: Zu viel anorganischer Stickstoff schwemmt in Flüsse und Seen, was zu massivem Algenwachstum führt. Das verbraucht beim Verrotten den Sauerstoff im Wasser und erstickt Fische sowie andere Lebewesen.
+
+* *Trinkwassersicherheit*: Hohe Nitratwerte im Grundwasser sind gesundheitsschädlich. Sie können bei Säuglingen zu Sauerstoffmangel im Blut führen und das Risiko für bestimmte Erkrankungen erhöhen.
+
+* *Klimaschutz*: Der Einsatz stickstoffhaltiger Düngemittel setzt Lachgas ($N_2O$) frei – ein extrem starkes Treibhausgas, das die Erderwärmung antreibt. 
+
+* *Bodengesundheit*: Ein Überschuss anorganischer Stickstoffdünger säuert den Boden langfristig an. Das zerstört das natürliche Gleichgewicht der Mikroorganismen und setzt giftige Schwermetalle wie Aluminium frei.
+
+* *Artenvielfalt*: Viele heimische Pflanzenarten sind an Nährstoffarmut angepasst. Zu viel Stickstoff im Boden begünstigt wenige stark wuchernde Arten und verdrängt die Biodiversität.
+
+[^2]: Prompt: "Why is it important to reduce inorganic nitrogen?", 18.10.2026, 18:34 Uhr, Google
