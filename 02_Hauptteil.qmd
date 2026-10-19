@@ -7,13 +7,13 @@
 * gesellschaftliches Handeln (z.B. projektbezogene Öffentlichkeitsarbeit).
 
 
-## Das Verhalten im Meeressediment
+## Sediment Proben
+Sediment Proben wurden Zeitlang in großen Mengen aus dem Meer entnommen und als gesamtes untersucht. Doch die untersuchungen einzelner sandkörner half uns auf einer Ebene mit den Mikroben zu forschen. 
 
-### Sedimentoberfläche
+### Sedimentoberfläche 
+Durch die Erforschung der einzelnen Sandkörnen fand man heraus, dass 
 
-Als Sedimentoberfläche betrachtet man 
-Die Sedimentoberfläche ist ein entscheidender Faktor, da Mikroben sich eher in Rissen und kleinen Dellen in der
-Oberfläche ansiedeln und vermehren, da sie dort vor den Außeneinwirkungen besser geschützt sind.
+### Mikroben Verhalten 
 
 Dieses Verhalten sieht man auch klar in @fig-mikrobe, wo sich die Mikroben hauptsächlich in den Rillen und Mulden ansiedeln.
 
@@ -21,7 +21,7 @@ Dieses Verhalten sieht man auch klar in @fig-mikrobe, wo sich die Mikroben haupt
 
 In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem Sandkorn.
 
-### Porenwasserfluss
+## Porenwasserfluss
 
 Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
 wird und als Transportmittel genutzt wird.
@@ -48,14 +48,3 @@ plt.show()
 ```
 
 
-## Die Betrachtung einzelner Körner
-
-{{< lipsum >}}
-
-### Besiedelungsmuster
-
-{{< lipsum >}}
-
-### Diversität der Mikroben 
-
-{{< lipsum >}}

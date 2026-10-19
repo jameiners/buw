@@ -41,8 +41,7 @@ book:
     - index.qmd
     - 01_intro.qmd
     - 02_Hauptteil.qmd
-    - 03_Interpretation.qmd
-    - 04_Zusammenfassung.qmd
+    - 03_Zusammenfassung.qmd
     - references.qmd
        
   output-file: "buw"
