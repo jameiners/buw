@@ -8,21 +8,23 @@
 
 
 ## Sedimentproben
-Sediment Proben wurden Zeitlang in großen Mengen aus dem Meer entnommen und als gesamtes untersucht. Doch die untersuchungen einzelner sandkörner half uns auf einer Ebene mit den Mikroben zu forschen. 
+Sedimentproben wurden eine zeitlang in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch grobere abschätzungen gemacht wurden, was einen größere Fehler menge erzeugte. Doch die Untersuchungen einzelner Sandkörner half uns auf einer Ebene mit den Mikroben zu forschen und genau fest zu machen wie sie sich je nach Sandkorn Größe und oberfläche verhalten. 
 
 ### Sedimentoberfläche 
-Durch die Erforschung der einzelnen Sandkörnen fand man heraus, dass jedes Sandkorn seine eigene Oberfläche hat, die rund, eckig, oval, rissig, ... sein kann. Und diese haben eine direkte Auswirkung auf die Besiedelung und deren Dichte der Mikroben haben.
+Durch die Erforschung der einzelnen Sandkörnen fand man heraus, dass jedes Sandkorn seine eigene Oberfläche hat, die rund mit wenig einkerbungen sein kann, aber auch spitz mit tiefen rissen (Mykro m) und langen kanten(Mykro m). Und diese Unterschiede haben eine direkte Auswirkung auf die Besiedelung und deren Dichte der Mikroben.
  
-### Mikroben Verhalten 
-Mikroben haben bevorzugte und Orte an denen sie garnicht siedeln.
 
-(Tabelle mit den Sacchen die sie bevorzugen und mit sachen die sie nicht besidel)
-
-Dieses Verhalten sieht man auch klar in @fig-mikrobe, wo sich die Mikroben hauptsächlich in den Rillen und Mulden ansiedeln.
+Dieses sieht man auch klar in @fig-mikrobe, wo sich die Mikroben hauptsächlich in den Rillen und Mulden ansiedeln.
 
 ![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){#fig-mikrobe}
 
 In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem Sandkorn.
+
+### Mikroben Verhalten 
+
+Mikroben haben bevorzugte und Orte an denen sie gar nicht siedeln.
+
+(Tabelle mit den Sachen die sie bevorzugen und mit Sachen die sie nicht besiedel)
 
 ## Porenwasserfluss
 
@@ -49,5 +51,3 @@ plt.xlabel('$z$')
 plt.ylabel('$erf(z)$')
 plt.show()
 ```
-
-
