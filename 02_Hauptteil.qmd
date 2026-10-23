@@ -8,7 +8,7 @@
 
 
 ## Sedimentproben
-Sedimentproben wurden eine zeitlang in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch grobere abschätzungen gemacht wurden, was einen größere Fehler menge erzeugte. Doch die Untersuchungen einzelner Sandkörner half uns auf einer Ebene mit den Mikroben zu forschen und genau fest zu machen wie sie sich je nach Sandkorn Größe und oberfläche verhalten. 
+Sedimentproben wurden eine zeitlang in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch gröbere Abschätzungen gemacht wurden, was einen größere Fehler menge erzeugte. Doch die Untersuchungen einzelner Sandkörner half uns auf einer Ebene mit den Mikroben zu forschen und genau fest zu machen wie sie sich je nach Sandkorn Größe und oberfläche verhalten. 
 
 ### Sedimentoberfläche 
 Durch die Erforschung der einzelnen Sandkörnen fand man heraus, dass jedes Sandkorn seine eigene Oberfläche hat, die rund mit wenig einkerbungen sein kann, aber auch spitz mit tiefen rissen (Mykro m) und langen kanten(Mykro m). Und diese Unterschiede haben eine direkte Auswirkung auf die Besiedelung und deren Dichte der Mikroben.
@@ -24,14 +24,24 @@ In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem San
 
 Mikroben haben bevorzugte und Orte an denen sie gar nicht siedeln.
 
-(Tabelle mit den Sachen die sie bevorzugen und mit Sachen die sie nicht besiedel)
+|Siedelungs hemmend| Siedelungs fördernd| Erklärung | 
+|:---:|:---:|:---:|
+|Glatte Oberflächen| kleine Unebenheiten | Da sie auf glatten oberflächen der Umgebeung einfach ausgesetzt sind und dur Physikalische kräfte (beschädigt) werden| 
+|zu große Risse(Mykro m)| kleinere Risse(Mykro m)| Zu große Risse lassen sich ausspülen und die Mikroben können keine wirkliche gemeinde bilden|
+|Tiefe Risse| kleine Risse| wen die Rise zu tief sind haben die Mikroben keine Möglichkeit effizient Stoffwechsel,der durch den Porenwasserfluss entsteht, zu betreiben.
+
+Sie haben auch je nach größe des Sandkorns eine andere Pozentuale verteilung der diversität 
+
+( Bild von Artikel [1])
+
+Außerdem haben die mikroben verschieden Art und weisen wie sie sich an das Sandkorn andocken.
+
+
 
 ## Porenwasserfluss
 
-Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt
-wird und als Transportmittel genutzt wird.
-
-Flow-through reactor (FTR) @Roychoudhury_1998
+Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt wird. Dieser wird von den Mikroben als Transportmittel für nährstoffe und abfall produkte genutzt. 
+Dazu gibt es folgende Gleichung die den Porenwasserfluss Nähert: Flow-through reactor (FTR) @Roychoudhury_1998
 
 $$
 \frac{C}{C_0} = 0.5 \cdot erf \left( \frac{1 - t^*}{2 \sqrt{\alpha_L^* t^*}} \right)
