@@ -1,47 +1,63 @@
 # Schwerpunktsthemen
 
-* Wissensteil (theoretischer Hintergrund), 
+- Wissensteil (theoretischer Hintergrund),
 
-* wissenschaftlicher Handlungsteil (z.B. fachbezogene Experimente/Versuche) und 
+- wissenschaftlicher Handlungsteil (z.B. fachbezogene Experimente/Versuche) und
 
-* gesellschaftliches Handeln (z.B. projektbezogene Öffentlichkeitsarbeit).
-
+- gesellschaftliches Handeln (z.B. projektbezogene Öffentlichkeitsarbeit).
 
 ## Sedimentproben
-Sedimentproben wurden eine zeitlang in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch gröbere Abschätzungen gemacht wurden, was einen größere Fehler menge erzeugte. Doch die Untersuchungen einzelner Sandkörner half uns auf einer Ebene mit den Mikroben zu forschen und genau fest zu machen wie sie sich je nach Sandkorn Größe und oberfläche verhalten. 
 
-### Sedimentoberfläche 
+Sedimentproben wurden eine zeitlang in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch gröbere Abschätzungen gemacht wurden, was einen größere Fehler menge erzeugte. Doch die Untersuchungen einzelner Sandkörner half uns auf einer Ebene mit den Mikroben zu forschen und genau fest zu machen wie sie sich je nach Sandkorn Größe und oberfläche verhalten.
+
+### Sedimentoberfläche
+
 Durch die Erforschung der einzelnen Sandkörnen fand man heraus, dass jedes Sandkorn seine eigene Oberfläche hat, die rund mit wenig einkerbungen sein kann, aber auch spitz mit tiefen rissen (Mykro m) und langen kanten(Mykro m). Und diese Unterschiede haben eine direkte Auswirkung auf die Besiedelung und deren Dichte der Mikroben.
- 
 
-Dieses sieht man auch klar in @fig-mikrobe, wo sich die Mikroben hauptsächlich in den Rillen und Mulden ansiedeln.
+![Formen unterschied mit ein beziehung des Porenwasserflusses entn. aus @probandtMicrobialLifeSand2018](/images/Formfacktoren.png){width=70%}
 
-![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){#fig-mikrobe}
-
-In @fig-mikrobe sieht man die Elektronenmikroskopie der Verteilung auf einem Sandkorn.
-
-### Mikroben Verhalten 
+### Mikroben Verhalten
 
 Mikroben haben bevorzugte und Orte an denen sie gar nicht siedeln.
 
-|Siedelungs hemmend| Siedelungs fördernd| Erklärung | 
-|:---:|:---:|:---:|
-|Glatte Oberflächen| kleine Unebenheiten | Da sie auf glatten oberflächen der Umgebeung einfach ausgesetzt sind und dur Physikalische kräfte (beschädigt) werden| 
-|zu große Risse(Mykro m)| kleinere Risse(Mykro m)| Zu große Risse lassen sich ausspülen und die Mikroben können keine wirkliche gemeinde bilden|
-|Tiefe Risse| kleine Risse| wen die Rise zu tief sind haben die Mikroben keine Möglichkeit effizient Stoffwechsel,der durch den Porenwasserfluss entsteht, zu betreiben.
 
-Sie haben auch je nach größe des Sandkorns eine andere Pozentuale verteilung der diversität 
+| Siedelungshemmend | Siedelungsfördernd | Erklärung |
+|:===|:===|:===|
+| Glatte Oberflächen | kleine Unebenheiten | Da sie auf glatten oberflächen der Umgebung einfach ausgesetzt sind und dur Physikalische Kräfte (beschädigt) werden |
+| zu große Risse($\mu m$) | kleinere Risse($\mu m$)| Zu große Risse lassen sich ausspülen und die Mikroben können keine wirkliche gemeinde bilden |
+| Tiefe Risse | kleine Risse | wen die Rise zu tief sind haben die Mikroben keine Möglichkeit effizient Stoffwechsel,der durch den Porenwasserfluss entsteht, zu betreiben.|
 
-( Bild von Artikel [1])
+![siedlungs dichte auf eimen beispiel sandkorn entn. aus @probandtMicrobialLifeSand2018](./images/Besidelungsdichte.png){width=70%}
 
-Außerdem haben die mikroben verschieden Art und weisen wie sie sich an das Sandkorn andocken.
+Sie haben auch je nach Größe des Sandkorns eine andere pozentuale Verteilung der Diversität wie in wie im Bild zusehen ist 
 
+![Prozentualer Anteil der Mikroben im Sediment entn. aus @probandtMicrobialLifeSand2018](./images/Verteilung_nach_greuse.png){width=70%}
 
+Außerdem haben die Mikroben verschieden Art und weisen wie sie sich an das Sandkorn andocken.
+
+Dieses sieht man auch klar in @fig-mikrobe, wo sich die Mikroben senkrecht oder in kleine Rissen andocken
+
+![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){#fig-mikrobe}
+
+In @fig-mikrobe sieht man die Elektronenmikroskopie eines Sandkornes, auf dem sich Mikroben verschieden binden.
 
 ## Porenwasserfluss
 
-Der Porenwasserfluss ist das Wasser, welches auf Grund der Permeabilität durch die kleinen Holräume im Sediment gedrückt wird. Dieser wird von den Mikroben als Transportmittel für nährstoffe und abfall produkte genutzt. 
-Dazu gibt es folgende Gleichung die den Porenwasserfluss Nähert: Flow-through reactor (FTR) @Roychoudhury_1998
+Der Porenwasserfluss war einer der kern Faktoren die im Labor nachgestellt werden musste da er das Austauschmedium für die Mikroben ist und für die Versorgung mit Sauerstoff, Nährstoffen und Organischem Material sorgt. Und er sorgt für die Verteilung der Mikroben was auch ein Punkt ist der untersucht wurde.
+
+Der Porenwasserfluss ist ein durch die Physik getriebener Prozess. Den was will immer vom hören potential zum kleineren fließen. Beim Sediment ist es nämlich so das das Wasser welches auf dem Sand ist einem enormen druck ausgesetzt ist welcher zu folge hat des er das Wasser welches zum geringeren Potenzial will durch den Sand drück und dadurch den Porenwasserfluss in gang setzt. Die rate mit der das Wasser durch das Sediment fließt hängt einerseits von der Permeabilität des Sedimentes ab als auch von der Viskosität des Wassers.
+
+Und Mit folgenden Gleichungen kann man das mathematisch beschreiben :
+
+$$
+u = \frac{k}{\mu\theta}\Delta p
+$$ @ahmerkampEffectSedimentGrain2020
+
+Diese Gleichung berechnet die Porenwassergeschwindigkeit im Meer, sie wurde aber für die Forschung mit dem Flow thru Reaktor nach k (die Permeabilität) umgestellt und für $\Delta p$ (Druck pro strecke) wurde der Wasserstandunterschied (h_1 - h_0) genutzt da dieser im Experiment die Potentialdifferenz erzeugt. $$
+k = \frac{u\mu\delta}{\rho g(h_1 - h_2)}\theta
+$$ @ahmerkampEffectSedimentGrain2020
+
+Dazu gibt es folgende Gleichung, die den Porenwasserfluss nähert: Flow-through reactor (FTR) @Roychoudhury_1998
 
 $$
 \frac{C}{C_0} = 0.5 \cdot erf \left( \frac{1 - t^*}{2 \sqrt{\alpha_L^* t^*}} \right)
@@ -61,3 +77,21 @@ plt.xlabel('$z$')
 plt.ylabel('$erf(z)$')
 plt.show()
 ```
+
+"Der Porenwasserfluss (englisch porewater flow oder advection) spielt in der Mikrobiologie von Sedimenten und Böden eine entscheidende Rolle für den Stoffwechsel und die Verteilung von Mikroorganismen. Er beschreibt die Bewegung von Wasser durch die winzigen Hohlräume (Poren) von Sand, Schlick oder Bodenschichten. Aus mikrobiologischer Sicht ist dieser Prozess aus folgenden Gründen fundamental:
+
+1.  Versorgung mit Nährstoffen und Elektronenakzeptoren
+
+In feinkörnigen, unbewegten Sedimenten erfolgt der Stofftransport primär über langsame Diffusion. In permeablen Sedimenten (wie marinen Sandböden) hingegen sorgt der Porenwasserfluss für einen advektiven Transport. • Ventilation: fließendes Porenwasser transportiert frischen Sauerstoff, Nitrat oder Sulfat tief in den Boden. • Biokatalysator: Durch die ständige Zufuhr von Elektronenakzeptoren und organischem Material wirken Sandböden wie riesige mikrobielle Filterreaktoren, die organische Substanzen extrem effizient abbauen.
+
+2.  Nischenbildung und Schutz vor Scherkräften
+
+Die Strömung im Porensystem beeinflusst direkt, wo und wie Bakterien leben: • Festsitzende Fraktion (Firmly attached): Die überwiegende Mehrheit der Bakterien (\>80–99 %) lebt in Biofilmen direkt auf den Sedimentkörnern. Sie besiedeln bevorzugt winzige Risse und Einbuchtungen (Korn-Depressionen), die sie vor der mechanischen Reibung (Abrasion) des Porenwasserflusses schützen. • Freie Fraktion (Porewater fraction): Ein kleinerer Teil der Mikroorganismen treibt frei im Porenwasser. Diese Zellen sind zwar ungeschützt, haben jedoch einen schnelleren Zugang zu gelösten Nährstoffen und teilen sich häufiger, da sie nicht diffusionslimitiert sind.
+
+3.  Ausbildung chemischer Gradienten
+
+Da der Fluss durch unregelmäßige Porenstrukturen und Oberflächenformen (wie Transport-Riffeln am Meeresboden) ungleichmäßig verläuft, entstehen millimeterkleine hydrodynamische Muster. Dies führt zu scharfen Sauerstoff- und Redox-Gradienten. Mikroorganismen passen ihren Stoffwechsel (z. B. von aerober Atmung zu Denitrifikation oder Sulfatreduktion) exakt an diese lokalen Strömungsverhältnisse an.
+
+4.  Transport und Auswaschung von Keimen
+
+In der Umweltmikrobiologie und im Grundwasserschutz ist der Porenwasserfluss entscheidend für die Migration von Bakterien und Viren. Er bestimmt, wie weit Krankheitserreger (z. B. Enterokokken oder E. coli) aus kontaminierten Ufer- und Strandsedimenten in Badegewässer oder ins Grundwasser getragen werden. Möchten Sie Details zu einem bestimmten Bereich erfahren? Ich kann Sie gezielt unterstützen, wenn Sie mir kurz mitteilen: • Geht es um marine Mikrobiologie (z. B. Wattenmeer/Sandbänke)? • Steht der Grundwasserschutz oder die Schadstoffausbreitung im Vordergrund? • Interessieren Sie sich für die Probenahme-Methoden von bakteriellem Porenwasser?" 23.10 22:27 Uhr Google Gemini
