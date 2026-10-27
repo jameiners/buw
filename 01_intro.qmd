@@ -4,23 +4,21 @@ Die folgende wissenschaftliche Untersuchung ist aus der Motivation entstanden, v
  
 Dabei stütze ich mich auf Grundlagenarbeiten des Max-Planck-Instituts für marine Mikrobiologie in Bremen.
 
-### Artikel 1
+## Artikel 1
 Dieser Artikel von Probandt et. al. @probandtMicrobialLifeSand2018, zeigt eine neue Betrachtungsweise in der Untersuchung von Mikroben in Sedimenten auf. Bisherige Analysen betrachteten nur größere Mengen Sand, sog. Bulk Sediment, engl., Probandt hingegen untersuchte das Verhalten von Mikroben auf einzelnen Sandkörnern.
 
 
-### Artikel 2
+## Artikel 2
 
 In dem Artikel von Ahmerkamp et. al. @ahmerkampEffectSedimentGrain2020 geht es darum, wie sich die unterschiedlichen Oberflächen der Sandkörner und der Wasserporenfluss auf die Dichte der Besiedelung und den Stoffwechsel der Mikroben auswirken.
 
 
-### Forschungsfragen 
+## Forschungsfragen 
 Aus den Themen der Artikel lassen sich folgende Forschungsfragen ableiten :
-
-- Wie verhalten sich Mikroorganismen in Meeressedimenten?
  
 - Wie verhalten sie sich auf einzelnen Sandkörnern?
   
-
+- Wie verhalten sich Mikroorganismen in Meeressedimenten?
 
 
 
