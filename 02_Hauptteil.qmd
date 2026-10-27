@@ -37,7 +37,7 @@ Daraus lässt sich ableiten, dass ein möglichst rundes Sandkorn mit flachen Mul
  
 In @fig-vert sieht man auch noch einmal wie sich die Pozentuale Verteilung, der Mikroben Familien, je nach Größe des Sandkorns ändert und wie sich die Ergebnisse von den vorherigen Bulk sediment abheben, da es doch große Abweichungen in der Verteilung gibt.      
 
-![Prozentualer Anteil der Mikroben im Sediment entn. aus @probandtMicrobialLifeSand2018](./images/Verteilung_nach_Groesse.png){width=60% #fig-vert}
+![Prozentualer Anteil der Mikroben im Sediment entn. aus @probandtMicrobialLifeSand2018](./images/Verteilung_nach_Groesse.png){width=70% #fig-vert}
 
 Außerdem haben die Mikroben verschieden Art und weisen wie sie sich an das Sandkorn binden.
 
@@ -50,18 +50,21 @@ Dieses sieht man auch beispielhaft in der Elektronenmikroskopie @fig-mikrobe, wo
 
 ## Porenwasserfluss
 
-Der Porenwasserfluss ist ein durch die Physik getriebener Prozess. Den Wasser will immer vom hören potential zum kleineren fließen. Beim Sediment ist es nämlich so das das Wasser welches auf dem Sand ist einem enormen druck ausgesetzt ist welcher zu folge hat des er das Wasser, welches zum geringeren Potenzial will, durch den Sand drück und dadurch den Porenwasserfluss in gang setzt. Die rate mit der das Wasser durch das Sediment fließt hängt einerseits von der Permeabilität des Sedimentes ab als auch von der Viskosität des Wassers.
-
-Der Porenwasserfluss war einer der kern Faktoren die im Labor nachgestellt werden musste da er das Austauschmedium für die Mikroben ist und für die Versorgung mit Sauerstoff, Nährstoffen und Organischem Material sorgt. Diese Faktoren beeinflussen alle die Siedelungsdichte und den Stoffwechsel, daher mussten sie genau so wie im Meer sein da es sonst zu falschen Ergebnissen kommen würde. 
-Damit es dazu nicht kam wurden folgende Mathematische Gleichungen genutzt um gegenzurechnen ob die Gegebenheiten denen im Meer gleich sind. 
-
-Die eben angesprochene Permeabilität und Viskosität kann man mit folgenden Gleichungen mathematisch beschreiben (Darcy-Gesetz) :
+Der Porenwasserfluss ist ein durch die Physik getriebener Prozess. Den Wasser will immer vom hören potential zum kleineren fließen. Beim Sediment ist es nämlich so das das Wasser welches auf dem Sand ist einem enormen druck ausgesetzt ist welcher zu folge hat des er das Wasser, welches zum geringeren Potenzial will, durch den Sand drück und dadurch den Porenwasserfluss in gang setzt.
+Die rate mit der das Wasser durch das Sediment fließt hängt einerseits von der Permeabilität des Sedimentes ab als auch von der Viskosität des Wassers, dazu gibt es das Darcy-Gesetz welches mit der Folgenden Gleichung berechnen wird :
 
 $$
 u = \frac{k}{\mu\theta}\Delta p
-$$ @ahmerkampEffectSedimentGrain2020
+$$ 
+@ahmerkampEffectSedimentGrain2020
 
-Diese Gleichung berechnet die Porenwassergeschwindigkeit im Meer, sie wurde aber für die Forschung mit dem Flow thru Reaktor nach k (die Permeabilität) umgestellt und für $\Delta p$ (Druck pro strecke) wurde der Wasserstandunterschied ($h_1-h_0$) genutzt da dieser im Experiment die Potentialdifferenz erzeugt. 
+
+Der Porenwasserfluss war einer der kern Faktoren die im Labor nachgestellt werden musste, da er das Austauschmedium für die Mikroben ist und für die Versorgung mit Sauerstoff, Nährstoffen und Organischem Material sorgt.
+
+Der Testaufbau der daraus resultierte bestand aus 5 parallelen FRT (Flow-Through Reactoren) die aus einem Plexiglas Zylinder mit einem Durchmesser von 10cm und einer Länge von 20cm bestanden. Diese wurde dann mit ungefähr 1,5l sediment gefüllt, welches vorher durch sieben in fünf Größen unterteilt wurde. Einmal ungesiebt, <355$\mu m$, 355-500$\mu m$,500-700$\mu m$ und 710-1000$\mu m$ jede dieser Fraktionen wurde dann in ein FRT gefüllt und dort von unten mit Wasser durchpumpt und oben es entnommen werden konnte. So entstand ein Meer welches man nach seine wünschen steuern konnte und ins kleinste detail untersuchen konnte.
+Da aber ein "vermutlich" richtiger Aufbau in der Wissenschaft jedoch nicht reicht haben sie mit folgenden mathematischen Gleichungen bewiesen das alles dem entspricht wie es im mehr ist.
+
+Diese ist die Gleichung welche die Porenwassergeschwindigkeit im Meer berechnet, sie wurde nur für die Forschung nach k (die Permeabilität) umgestellt und für $\Delta p$ (Druck pro strecke) wurde der Wasserstandunterschied ($h_1-h_0$) genutzt da es im Experiment nicht das riesige Meer gibt sondern es durch die pumpen erzeugt wird. 
 
 $$
 k = \frac{u\mu\delta}{\rho g(h_1 - h_0)}\theta
@@ -90,21 +93,20 @@ plt.ylabel('$erf(z)$')
 plt.show()
 ```
 Dies ist die Damköhler-Zahl sie vergliecht zwei Zeitskalen mit einander. Bei der Untersuchung wurde sie genutzt um die zeit die das Wasser braucht um durch das sediment zu fließen mit der zeit die die Bakterien brauchen um den gesamten Sauerstoff zu verbrauchen verglichen.
-Wen Da >1 dann bedeutet das das 
+Damit konnten sie nachvollziehen ob es eine Sauerstofflimitierung gab, was das Ergäbnis verfälscht hätte, denn wen $Da$ < 1 ist der Transport schneller als die Reaktion, das heißt das genügend Sauerstoff da ist.
 $$
 Da=\frac{R}{C_{in}}\cdot\frac{L\Theta}{u}
 $$
 
+Dies beiden Gleichungen beschäftigen sich mit der Oberflächengeometrie.
+Die erste berechnet eine theoretische Oberfläche den sich geht von einer perfekten Kugel, da sie nur den Durchmesser ($d_g$) und die Porosität ($\Theta$) nutzt. 
+
+Bei Der zweite Gleichung handelt es sich um die BAT-Methode, welche von Stephan Brunauer, Paul Emmett und Edward Teller entwickelt wurde.
+Diese nutzt Gas, in diesem Fall Stickstoff, welches sich an das Sandkorn adsorbiert, die Oberfläche des Korns auffüllt, um im nach gang messen zu können wie viele Teilchen es gebraucht hat um einen homogene Fläche zu bilden. Durch dieses Verfahren lassen dann auch die Mikrorisse und Poren messen die das Sandkorn hat.
+Das Ergebnis war, dass die mit der BAT-Methode gemessene Oberfläche 25-50 mal größer war als die Theoretische. Dies Fläche die vorher nicht erfasst worden war ist der eigentliche lebensraum der Mikroben, da sie dort geschützt sind.     
 $$
 S_{V,T}= 6(1-\Theta)\int_{d_0}^{d_1}\frac{p^(d_g)}{d_g}dd_g
 $$
-
 $$
 S_V = \rho _p\frac{A}{m}(1-\Theta)
 $$
-
-$$
-R = \frac{(C_{out}-C_{in})}{r_t}
-$$
-
-Mithilfe dieser ganzen mathematischen vorarbeit und konstanter Kontrolle während der Experimente konnten sie den test aufbau, der aus einem 
