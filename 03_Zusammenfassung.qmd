@@ -1,16 +1,17 @@
 # Zusammenfassung
 
-Zusammenfassend kann man sagen, dass der Sand, der in SPO und an anderen Stränden liegt, ein ein riesiger Bioreaktor, welcher von Mikroben getrieben wird, ist.Dieser Reaktor ist sehr effizient da es einen großen Porenwasserfluss gibt durch den die Mikroben kontinuierlich versorgt werden. Doch kommt es immer noch auf die Beschaffenheit des Sandkorns an wie und wo sich Mikrobenkolonien bilden.
+Zusammenfassend kann man sagen, dass der Sand, der in SPO und an anderen Stränden liegt, ein hocheffizientes ökologisches System ist, welcher von Mikroben getrieben wird. Dieses System ist sehr effizient da es einen großen Porenwasserfluss gibt durch den die Mikroben kontinuierlich versorgt werden. Doch kommt es immer noch auf die Beschaffenheit des Sandkorns an wie und wo sich Mikrobenkolonien bilden.
 
 Die Beobachtung der Mikroben auf einer kleineren Ebene wie dem einzelnen Sandkorn im Vergleich zu einem Sandhaufen verschafft uns einen detailierten Eindruck, wie sich Mikroben verhalten und vermehren was zu einem betrachtungswinkel geführt hat, was uns aufgezeigt hat wie sehr wir die Oberfläche der Sandkörner unterschätzt haben. 
 
-Die Existens der Mikroben ist sehr wichtig für unsere Umwelt da sie denen organischer Kohlenstoff remineralisiert wird und anorganischer Stickstoff zu $N_2$ reduziert wird. Ohne Remineralisierung durch die Mikroben kann Photoplankton keine Photosynthese betreiben, so dass kein Sauerstoff und keine neue Biomasse produziert werden.[^1] 
+Die mikrobielle Aktivität ist von entscheidender Bedeutung für die Umwelt, da durch sie organischer Kohlenstoff remineralisiert und anorganischer Stickstoff zu elementarem Stickstoff ($N_2$) reduziert wird. Ohne diese Prozesse wäre die Primärproduktion durch Phytoplankton limitiert @Meereisportal2026 @Copernicus2026[^1].
+
 
 [^1]: Prompt: "Warum ist es wichtig Kohlenstoff zu remineralisieren?", 18.10.2026, 18:39 Uhr, Google
 
 {{< pagebreak >}}
 
-Die Reduktion des Stickstoffs ist aus mehreren Umwelt-, Gesundheits- und Klimagründen sehr wichtig [^2]:
+Die Reduktion des Stickstoffs ist aus mehreren Umwelt-, Gesundheits- und Klimagründen sehr wichtig @BUM2026[^2]:
 
 * *Gewässerschutz und Algenwachstum*: Zu viel anorganischer Stickstoff schwemmt in Flüsse und Seen, was zu massivem Algenwachstum führt. Das verbraucht beim Verrotten den Sauerstoff im Wasser und erstickt Fische sowie andere Lebewesen.
 

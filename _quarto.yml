@@ -81,7 +81,6 @@ format:
   pdf:
     documentclass: scrreprt  # scrbook
     classoption: [twoside]
-
     # keep-tex: true
 
     toc: true
