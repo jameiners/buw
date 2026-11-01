@@ -1,3 +1,7 @@
 # Nomenklatur {.unnumbered}
 
-FTR - Flow-Through Reactor, engl.
+**FTR** - **F**low-**T**hrough **R**eactor, engl.
+**BAT** - **B**runauer, **E**mmett, **T**eller
+$S_{V,T}$ - theoretische Oberfläche 
+$S_V$ - Oberfläche je Volumeneinheit 
+$Da$ - Damköhler-Zahl
