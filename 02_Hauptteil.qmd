@@ -85,12 +85,13 @@ Der Porenwasserfluss ist einer der Kernfaktoren, der im Labor nachgestellt werde
 Der Testaufbau bestand aus fünf parallelen FRTs (Flow-Through Reactors), die aus einem Plexiglaszylinder mit einem Durchmesser 
 von 10 cm und einer Länge von 20 cm bestehen. Diese wurden mit ungefähr 1,5 l Sediment gefüllt, welches vorher durch Sieben in fünf Größen unterteilt wurde. Einmal ungesiebt, < 355 $\mu$ m, 355-500 $\mu$ m, 500-700 $\mu$ m und 710-1000 $\mu$ m jede dieser Fraktionen wurde dann in ein FRT gefüllt und dort von unten mit Wasser durchpumpt und oben es entnommen werden konnte. So entstand ein Meer, welches kontrolliert und präzise untersucht werden konnte.
 
-![Schematische Aufzeichnung eines Flow-Through Reactors](./images/ftr2.pdf){#fig-ftr2}
-![Räumliche Darstellung eines Flow-Through Reactors](./images/ftr1.pdf){#fig-ftr1}
+![Schematische Aufzeichnung eines Flow-Through Reactors](./images/ftr2.pdf){#fig-Flow-Trough_Reactor}
+
+![Räumliche Darstellung eines Flow-Through Reactors](./images/ftr1.pdf){#fig-RFTR}
 
 Da aber ein vermutlich richtiger Aufbau in der Wissenschaft nicht reicht, wurde mittels mathematischer Modellierung validiert, dass die Laborbedingungen den natürlichen Gegebenheiten entsprachen.
 
-Die Darcy-Gleichung @eq-darcy wurde für die Forschung an Sandsediment zur Permeabilität $k$ umgestellt. Der Druckgradienten $\nabla p = \rho g (h_1 - h_0) \delta^{-1}$ des Meeres wurde mithilfe des Wasserstandunterschieds $(h_1-h_0)$ in den Röhren des Versuchsaufbaus bestimmt, siehe @fig-ftr2 , @ahmerkampEffectSedimentGrain2020.
+Die Darcy-Gleichung @eq-darcy wurde für die Forschung an Sandsediment zur Permeabilität $k$ umgestellt. Der Druckgradienten $\nabla p = \rho g (h_1 - h_0) \delta^{-1}$ des Meeres wurde mithilfe des Wasserstandunterschieds $(h_1-h_0)$ in den Röhren des Versuchsaufbaus bestimmt, siehe @fig-Flow-Trough_Reactor , @ahmerkampEffectSedimentGrain2020.
 
 $$
 k = \frac{u\mu\delta}{\rho g(h_1 - h_0)}\theta
@@ -136,10 +137,10 @@ plt.show()
 ```
 --> 
 
-Die simulierten Meeresbedingungen müssen mit dem Sauerstoffverbrauch der Mikroben in der freien Natur abgeglichen werden. Hierfür nahmen die Wissenschaftler die Damköhler-Zahl #eq-da, welche den Sauerstoffverbrauch der Mikroben in Relation zum versorgenden Porenwasserfluss setzt.
+Die simulierten Meeresbedingungen müssen mit dem Sauerstoffverbrauch der Mikroben in der freien Natur abgeglichen werden. Hierfür nahmen die Wissenschaftler die Damköhler-Zahl @eq-da, welche den Sauerstoffverbrauch der Mikroben in Relation zum versorgenden Porenwasserfluss setzt.
 
 Mit dieser Kennzahl konnte geprüft werden, ob es eine Sauerstofflimitierung gab, welche das Ergebnis verfälscht hätte. 
-Ist die Damköhlerzahl $Da$ < 1 ist der Transport schneller als die Reaktion und es ist genügend Sauerstoff vorhanden @fig-PWF.
+Ist die Damköhlerzahl $Da$ < 1 ist der Transport schneller als die Reaktion und es ist genügend Sauerstoff vorhanden @fig-PWF_AR.
 $$
 Da=\frac{R}{C_{in}}\cdot\frac{L\Theta}{u}
 $$ {#eq-da}
