@@ -14,9 +14,9 @@ In dem Artikel von Ahmerkamp et. al. @ahmerkampEffectSedimentGrain2020 geht es d
 
 
 ## Forschungsfragen 
-Aus den Themen der Artikel lassen sich folgende Forschungsfragen ableiten :
+Aus den Themen der Artikel lassen sich folgende Forschungsfragen ableiten:
  
-- Wie verhalten sie sich auf einzelnen Sandkörnern?
+- Wie verhalten sich Mikroben auf einzelnen Sandkörnern?
   
 - Wie verhalten sich Mikroorganismen in Meeressedimenten?
 

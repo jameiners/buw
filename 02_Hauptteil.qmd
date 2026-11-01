@@ -1,18 +1,41 @@
-# Schwerpunktsthemen
+# Sedimentproben
 
+Sedimentproben wurden bis heute hauptsächlich in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch ungenauere Ergebnisse entstanden sind, was zu einer Abweichung im Verständnis über Mikroben im Sediment geführt hat. Doch die Untersuchungen einzelner Sandkörner ermöglichte eine Betrachtung auf der Mikroskala der Mikroorganismen. Es konnte präzise analysiert werden, wie sich das Besiedlungsverhalten in Abhängigkeit von Korngröße und Oberflächenbeschaffenheit verhält. Das Sediment ist somit als hocheffizientes ökologisches System zu betrachten.
 
-## Sedimentproben
-
-Sedimentproben wurden bis heute hauptsächlich in großen Mengen aus dem Meer entnommen und als Gesamtes untersucht, wodurch ungenauere Ergebnisse entstanden sind, was zu einer Abweichung im Verständnis über Mikroben im Sediment geführt hat. Doch die Untersuchungen einzelner Sandkörner ermöglichte eine Betrachtung auf der Mikroskala der Mikroorganismen. Es konnte präzise analysiert werden, wie sich das Besiedlungsverhalten in Abhängigkeit von Korngröße und Oberflächenbeschaffenheit verhält. Das Sediment ist somit als hocheffizientes ökologisches System zu betrachten.  
-
-### Sedimentoberfläche
+## Kornbeschaffenheiten
 
 Durch die Erforschung der einzelnen Sandkörnen wurde festgestellt, dass jedes Sandkorn seine eigene Oberfläche hat, die z.B rund mit wenig Einkerbungen sein kann, aber auch spitz mit tiefen Rissen und langen Kanten, allerdings im $\mu m$ Bereich. Diese Unterschiede der Sandkörner haben eine direkte Auswirkung auf den Ort und die Dichte der Besiedelung durch Mikroben auf dem Sediment. Zusätzlich beeinflusst die Struktur auch die Stoffwechselrate der Mikroben, da der Porenwasserfluss je nach Oberfläche anders fliesst, was man in @fig-formfaktor sehen kann.
 
-![Formenunterschied mit Einbeziehung des Porenwasserflusses entn. aus @probandtMicrobialLifeSand2018](/images/Formfaktoren.png){width=70% #fig-formfaktor}
+![Formenunterschied mit Einbeziehung des Porenwasserflusses entn. aus @probandtMicrobialLifeSand2018](/images/Formfaktoren.png){#fig-formfaktor}
 
 
-### Mikrobenverhalten im Sediment
+Die Oberflächenbestimmung einzelner Sandkörner wurde auf zwei Arten durchgeführt: 
+  
+1. Die Sandkornoberfläche $S_{V,T}$ wurde als perfekte Kugeloberfläche mit Durchmesser ($d_g$) und Porosität ($\Theta$) angesehen. 
+  $$
+  S_{V,T} = 6 (1-\Theta) \int_{d_0}^{d_1} \frac{p(d_g)}{d_g} dd_g
+  $$ {#eq-SVT}
+
+  - $\Theta$ Porosität
+  - $p(d_g)$ Wahrscheinlichkeitsdichte 
+  - $d_g$ Durchmesser 
+
+2. Die Sandkornoberfläche wurde mit der BET-Methode nach Stephan Brunauer, Paul Emmett und Edward Teller bestimmt. 
+   Diese Methode nutzt Gas, in diesem Fall Stickstoff $N_2$, welches sich an das Sandkorn adsorbiert, um eine homogene Oberfläche zu schaffen. Danach wird die Teilchenzahl gemessen, die sich an das Sandkorn geheftet haben, um die Oberfläche zu homogenisieren. Durch dieses Verfahren lassen sich sowohl Mikrorisse als auch Poren des Sandkorns messen @MP2026.
+  $$
+  S_V = \rho _p\frac{A}{m}(1-\Theta)
+  $$
+
+  - $S_V$ Oberfläche je Volumeneinheit 
+  - $\rho _p$ Partikeldichte 
+  - $\frac{A}{m}$ Oberfläche/Gewicht Sediment 
+  - $1-\Theta$ Feststoffanteil 
+  
+
+Das Ergebnis des Experiments zur Sandkornoberfläche zeigte, dass die mit der BAT-Methode gemessene Oberfläche 25-50 mal größer war als die Oberflächen mit der ersten Methode. Die mit der BAT-Methode gefundenen Räume sind der Hauptlebensraum der Mikroben.
+
+
+## Mikrobenverhalten im Sediment
 
 Wie im vorherigen Absatz beschrieben, haben Mikroben bevorzugte Orte an denen sie siedeln. 
 Diese Siedlungsorte sind durch folgenden Merkmale gekennzeichnet: 
@@ -26,51 +49,52 @@ Diese Siedlungsorte sind durch folgenden Merkmale gekennzeichnet:
 
 Daraus lässt sich ableiten, dass ein möglichst rundes Sandkorn mit flachen Mulden, so wie ein Golfball, das optimale Habitat für Mikroben ist, vgl. @fig-besdicht. Diese Form schafft die Grundlage für den bestmöglichen Austausch mit dem Porenwasserfluss und bietet ebenso Schutz vor den umliegenden Kräften. Mit Ausnahme des kleinen Anteils der Mikroben, die direkt im Porenwasser leben.
 
-![Siedlungsdichte auf einem Beispielsandkorn entn. aus @probandtMicrobialLifeSand2018](./images/Besiedelungsdichte.png){width=60% #fig-besdicht}
+![Siedlungsdichte auf einem Beispielsandkorn entn. aus @probandtMicrobialLifeSand2018](./images/Besiedelungsdichte.png){#fig-besdicht}
 
- 
+{{< pagebreak >}}
+
 In @fig-vert sieht man wie sich die prozentuale Verteilung der Mikrobenfamilien je nach Größe des Sandkorns ändert und wie sich die Ergebnisse von den vorherigen Bulksedimenten abheben, da es große Abweichungen in der Verteilung gibt.      
 
-![Prozentualer Anteil der Mikroben im Sediment entn. aus @probandtMicrobialLifeSand2018](./images/Verteilung_nach_Groesse.png){width=70% #fig-vert}
+![Prozentualer Anteil der Mikroben im Sediment entn. aus @probandtMicrobialLifeSand2018](./images/Verteilung_nach_Groesse.png){#fig-vert}
 
-{{<pagebreak>}}
+{{< pagebreak >}}
 
 In der Elektronenmikroskopie in @fig-mikrobe, sieht man verschiedene Arten, wie sich Mikroben senkrecht oder in kleinen Rissen an ein Sandkorn binden.
 
-![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){width=65% #fig-mikrobe}
-
-{{<pagebreak>}}
+![Mikroben auf Sand, entn. aus @ahmerkampEffectSedimentGrain2020](./images/Mikroben_auf_Sand.pdf){#fig-mikrobe}
 
 
-## Porenwasserfluss
+## Umgebungseinfluss am Beispiel des Porenwasserflusses 
 
 Der Porenwasserfluss ist ein durch die Physik getriebener Prozess: Wasser will immer vom höheren zum niedrigeren Potential fließen. Beim Sediment wird der Porenwasserfluss in Gang gesetzt, indem Wasser, welches auf dem Sand ist, einem enormen Druck ausgesetzt ist, welcher zur Folge hat, dass das Wasser, welches zum geringeren Potenzial fliessen will, durch den Sand drückt.
 
 Die Rate mit der das Wasser durch das Sediment fließt hängt einerseits von der Permeabilität des Sedimentes und andererseits der Viskosität des Wassers ab. Die Flussrate $u$ wird durch das Darcy-Gesetz in folgender Gleichung beschrieben @ahmerkampEffectSedimentGrain2020:
 
 $$
-u = \frac{k}{\mu\theta}\Delta p
-$$ 
-
+u = \frac{k}{\mu\theta}\nabla p 
+$$ {#eq-darcy}
 
   - $u$ Porenwassergeschwindigkeit 
   - $k$ Permeabilität
   - $\mu$ Dynamische Viskosität 
   - $\theta$ Porosität 
-  - $\Delta p$ Druckgradient
+  - $\nabla p$ Druckgradient
 
 Der Porenwasserfluss ist einer der Kernfaktoren, der im Labor nachgestellt werden musste, da er das Austauschmedium für die Mikroben ist und für die Versorgung mit Sauerstoff, Nährstoffen und organischem Material sorgt.
 
-Der Testaufbau bestand aus fünf parallelen FRTs (Flow-Through Reactors), die aus einem Plexiglaszylinder mit einem Durchmesser von 10 cm und einer Länge von 20 cm bestehen. Diese wurden mit ungefähr 1,5 l Sediment gefüllt, welches vorher durch Sieben in fünf Größen unterteilt wurde. Einmal ungesiebt, < 355 $\mu m$, 355-500 $\mu m$,500-700 $\mu m$ und 710-1000 $\mu m$ jede dieser Fraktionen wurde dann in ein FRT gefüllt und dort von unten mit Wasser durchpumpt und oben es entnommen werden konnte. So entstand ein Meer, welches kontrolliert und präzise untersucht werden konnte.
+Der Testaufbau bestand aus fünf parallelen FRTs (Flow-Through Reactors), die aus einem Plexiglaszylinder mit einem Durchmesser 
+von 10 cm und einer Länge von 20 cm bestehen. Diese wurden mit ungefähr 1,5 l Sediment gefüllt, welches vorher durch Sieben in fünf Größen unterteilt wurde. Einmal ungesiebt, < 355 $\mu$ m, 355-500 $\mu$ m, 500-700 $\mu$ m und 710-1000 $\mu$ m jede dieser Fraktionen wurde dann in ein FRT gefüllt und dort von unten mit Wasser durchpumpt und oben es entnommen werden konnte. So entstand ein Meer, welches kontrolliert und präzise untersucht werden konnte.
 
-Da aber ein "vermutlich" richtiger Aufbau in der Wissenschaft nicht reicht, wurde mittels mathematischer Modellierung validiert, dass die Laborbedingungen den natürlichen Gegebenheiten entsprachen.
+![Schematische Aufzeichnung eines Flow-Through Reactors](./images/ftr2.pdf){#fig-ftr2}
+![Räumliche Darstellung eines Flow-Through Reactors](./images/ftr1.pdf){#fig-ftr1}
 
-Diese ist die Gleichung welche die Porenwassergeschwindigkeit im Meer berechnet, sie wurde nur für die Forschung nach $k$ (die Permeabilität) umgestellt und für $\Delta p$ (Druck pro strecke) wurde der Wasserstandunterschied ($h_1-h_0$) genutzt da es im Experiment nicht das riesige Meer gibt sondern es durch die pumpen ein wasserstand Unterschied erzeugt wird @ahmerkampEffectSedimentGrain2020.
+Da aber ein vermutlich richtiger Aufbau in der Wissenschaft nicht reicht, wurde mittels mathematischer Modellierung validiert, dass die Laborbedingungen den natürlichen Gegebenheiten entsprachen.
+
+Die Darcy-Gleichung @eq-darcy wurde für die Forschung an Sandsediment zur Permeabilität $k$ umgestellt. Der Druckgradienten $\nabla p = \rho g (h_1 - h_0) \delta^{-1}$ des Meeres wurde mithilfe des Wasserstandunterschieds $(h_1-h_0)$ in den Röhren des Versuchsaufbaus bestimmt, siehe @fig-ftr2 , @ahmerkampEffectSedimentGrain2020.
 
 $$
 k = \frac{u\mu\delta}{\rho g(h_1 - h_0)}\theta
 $$ 
-
 
   - $k$ Permeabilität
   - $u$ Porenwassergeschwindigkeit 
@@ -79,11 +103,10 @@ $$
   - $\theta$ Porosität
   - $\rho$ Dichte des Wassers 
   - $g$ Erdbeschleunigung 
-  - $(h_1 - h_0)$ Druckhöhe 
+  - $(h_1 - h_0)$ Wasserstandsunterschiede in den Röhren 
 
-Diese Gleichung wurde genutzt um sicherzustellen das das Wasser in den FRTs keine bevorzugten Wege nahm und das es keine stellen gab die kein Wasser abbekamen. Den bevor das nicht gegeben war konnte man keine biologischen Raten untersuchen. 
-Dafür führten sie Tracer-Experimente mit Argon durch, den mit der Gleichung konnten sie berechnen wie die Argon Konzentration mit der zeit zunahm und anhand dessen bestimmen ob alles richtig verlief. 
-Kurz gesagt nähert sie den Porenwasserfluss: Flow-through reactor (FTR) @Roychoudhury_1998.
+Es war wichtig sicherzustellen, dass das Wasser gleichmäßig, ohne bevorzugte Wege, durch den Sedimentkern im FTR fliesst, da ansonsten biologischen Raten der Mikroben nicht untersucht werden können. 
+Dafür wurde das Wasser mit Argon versetzt und Tracer-Experimente zur Bestimmung der Argonkonzentration durchgeführt. Mit der nachfolgenden Gleichung konnte dann anhand der normierten Argonkonzentration $C/C_0$ der Porenwasserfluss im FTR prozentual bestimmt werden: Ein Wert von $C/C_0=0$ entspricht keinem Porenwasserfluss, ein Wert von $C/C_0=1$ bedeutet vollständiger Porenwasserfluss @Roychoudhury_1998.
 
 $$
 \frac{C}{C_0} = 0.5 \cdot erf \left( \frac{1 - t^*}{2 \sqrt{\alpha_L^* t^*}} \right)
@@ -93,8 +116,8 @@ $$
     - $C$ Ausgangskonzentration 
     - $C_0$ Eingangskonzentration 
   - $T^*$ Zeit 
-  - $\alpha _L^*$ Dispersiviät  
-  - $erf$ Fehlerfunktion (im unteren Graphen abgebildet) 
+  - $\alpha _L^*$ Dispersivität  
+  - $erf$ Fehlerfunktion
 
 <!--
 ```{python}
@@ -113,11 +136,13 @@ plt.show()
 ```
 --> 
 
-Dies ist die Damköhler-Zahl sie vergleicht zwei Zeitskalen mit einander. Bei der Untersuchung wurde sie genutzt um die zeit die das Wasser braucht um durch das Sediment zu fließen mit der Zeit die die Bakterien brauchen um den gesamten Sauerstoff zu verbrauchen verglichen.
-Damit konnten sie nachvollziehen ob es eine Sauerstofflimitierung gab, was das Ergebnis verfälscht hätte, denn wen $Da$ < 1 ist der Transport schneller als die Reaktion, das heißt das genügend Sauerstoff da ist.
+Die simulierten Meeresbedingungen müssen mit dem Sauerstoffverbrauch der Mikroben in der freien Natur abgeglichen werden. Hierfür nahmen die Wissenschaftler die Damköhler-Zahl #eq-da, welche den Sauerstoffverbrauch der Mikroben in Relation zum versorgenden Porenwasserfluss setzt.
+
+Mit dieser Kennzahl konnte geprüft werden, ob es eine Sauerstofflimitierung gab, welche das Ergebnis verfälscht hätte. 
+Ist die Damköhlerzahl $Da$ < 1 ist der Transport schneller als die Reaktion und es ist genügend Sauerstoff vorhanden @fig-PWF.
 $$
 Da=\frac{R}{C_{in}}\cdot\frac{L\Theta}{u}
-$$
+$$ {#eq-da}
 
   - $Da$ Damköhler-Zahl
   - $R$ Reaktionsrate
@@ -125,33 +150,7 @@ $$
   - $L$ Längenskala 
   - $\Theta$ Porosität
   - $u$ Porenwassergeschwindigkeit
--->
 
-Dies beiden Gleichungen beschäftigen sich mit der Oberflächengeometrie.
-Die erste berechnet eine theoretische Oberfläche den sich geht von einer perfekten Kugel, da sie nur den Durchmesser ($d_g$) und die Porosität ($\Theta$) nutzt. 
+![(a) Die Messergebnisse der Damköhlerzahl bei unterschiedlichen Sedimentkernen, wenn das Symbol leer ist, dann ist $Da$ > 1. (c) Die Damköhlerzahl bei Betrachtung eines einzelnen Sandkornes. entn. aus @ahmerkampEffectSedimentGrain2020](./images/Athmungsrate_zum_PWF.png){#fig-PWF_AR}
 
-Bei Der zweite Gleichung handelt es sich um die BET-Methode, welche von Stephan Brunauer, Paul Emmett und Edward Teller entwickelt wurde.
-Diese nutzt Gas, in diesem Fall Stickstoff, welches sich an das Sandkorn adsorbiert, die Oberfläche des Korns auffüllt, um im nach gang messen zu können wie viele Teilchen es gebraucht hat um einen homogene Fläche zu bilden. Durch dieses Verfahren lassen dann auch die Mikrorisse und Poren messen die das Sandkorn hat.
-Das Ergebnis war, dass die mit der BAT-Methode gemessene Oberfläche 25-50 mal größer war als die Theoretische. Dies Fläche die vorher nicht erfasst worden war ist der eigentliche lebensraum der Mikroben, da sie dort geschützt sind @MP2026.   
-$$
-S_{V,T} = 6 (1-\Theta) \int_{d_0}^{d_1} \frac{p(d_g)}{d_g} dd_g
-$$
-
-  - $S_{V,T}$ theoretische Oberfläche zu Volumeneinheit 
-  - $\Theta$ Porosität
-  - $p(d_g)$ Wahrscheinlichkeitsdichte 
-  - $d_g$ Durchmesser 
-
-$$
-S_V = \rho _p\frac{A}{m}(1-\Theta)
-$$
-
-  - $S_V$ Oberfläche je Volumeneinheit 
-  - $\rho _p$ Partikeldichte 
-  - $\frac{A}{m}$ Oberfläche/Gewicht Sediment 
-  - $1-\Theta$ Feststoffanteil 
-
-All diese Gleichung hängen aber letztlich zusammen da die Gleichung von @Roychoudhury_1998 $\Theta$ liefert, welches bei der Bestimmung der Oberfläche und der Permeabilität wichtig ist. Dadurch das wir $k$ die Permeabilität dann haben Könne wir $u$ mit der Gleichung berechnen.
-Wenn wir dann $\Theta,u$ haben könne wir diese zur Berechnung der Damköhler-Zahl benutzen um das Experiment du validieren. 
-Das heißt alle Gleichung gehören zu einem Netzwerk welches dazu konzipiert wurde um die Richtigkeit des Versuches zu beweisen.
-
+Die Untersuchungen zur Kornbeschaffenheiten von Sedimenten und deren Umgebungseinflüsse auf Mikroebene ergaben, dass nicht die Sphärizität des Sandkorn der ausschlaggebende Faktor ist, sondern das Zusammenspiel aus Porenwasserfluss und Kornoberfläche.
